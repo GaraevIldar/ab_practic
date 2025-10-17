@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PracticalWork.Library.Data.PostgreSql.Entities;
+using PracticalWork.Library.Enums;
 
 namespace PracticalWork.Library.Data.PostgreSql.Configurations;
 
@@ -31,5 +33,11 @@ internal sealed class AbstractBookConfiguration : EntityConfigurationBase<Abstra
         builder.HasMany(c => c.IssuanceRecords)
             .WithOne()
             .HasForeignKey(p => p.BookId);
+        
+        builder.Property(b => b.Category)
+            .IsRequired()
+            .HasConversion<int>() 
+            .HasDefaultValue(BookCategory.Default) 
+            .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore); 
     }
 }

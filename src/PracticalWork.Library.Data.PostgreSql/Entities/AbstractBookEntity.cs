@@ -28,4 +28,7 @@ public abstract class AbstractBookEntity : EntityBase
 
     /// <summary>Записи о выдачи книги</summary>
     public ICollection<BookBorrowEntity> IssuanceRecords { get; set; }
+    
+    /// <summary>Категория</summary>
+    public BookCategory Category { get; set; }
 }
