@@ -28,7 +28,7 @@ public class BooksController : Controller
     [ProducesResponseType(typeof(CreateBookResponse), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(500)]
-    [ServiceFilter(typeof(GenericValidationFilter<CreateBookRequestValidator>))]    
+    [ServiceFilter(typeof(GenericValidationFilter<CreateBookRequest>))]    
     public async Task<IActionResult> CreateBook(CreateBookRequest request)
     {
         var result = await _bookService.CreateBook(request.ToBook());

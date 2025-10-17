@@ -4,6 +4,8 @@ using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
 using PracticalWork.Library.Controllers.Validations.v1;
 using System.Globalization;
+using PracticalWork.Library.Contracts.v1.Books.Request;
+using PracticalWork.Library.Controllers.Filters;
 
 namespace PracticalWork.Library.Controllers;
 
@@ -16,11 +18,17 @@ public static class Entry
     {
         builder.Services.AddValidation();
         builder.Services.AddApiVersioning();
+        builder.Services.AddFilters();
         builder.AddApplicationPart(typeof(Api.v1.BooksController).Assembly);
 
         return builder;
     }
-
+    private static IServiceCollection AddFilters(this IServiceCollection services)
+    {
+        services.AddScoped<GenericValidationFilter<CreateBookRequest>>();
+        
+        return services;
+    }
     private static void AddValidation(this IServiceCollection services)
     {
         services.AddValidatorsFromAssemblyContaining<CreateBookRequestValidator>();
