@@ -35,4 +35,17 @@ public class BooksController : Controller
 
         return Content(result.ToString());
     }
+
+    [HttpPut("{id}")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(CreateBookResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    [ServiceFilter(typeof(GenericValidationFilter<UpdateBookRequest>))]
+    public async Task<IActionResult> UpdateBook(Guid id, UpdateBookRequest request)
+    {
+        var result = await _bookService.UpdateBook(request.ToBook());
+        
+        return Content(result.ToString());
+    }
 }

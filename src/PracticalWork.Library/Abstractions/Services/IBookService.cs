@@ -8,4 +8,6 @@ public interface IBookService
     /// Создание книги
     /// </summary>
     Task<Guid> CreateBook(Book book);
+
+    Task<Guid> UpdateBook(Book book);
 }

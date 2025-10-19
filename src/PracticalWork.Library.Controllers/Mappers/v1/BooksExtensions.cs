@@ -15,4 +15,13 @@ public static class BooksExtensions
             Year = request.Year,
             Category = (BookCategory)request.Category
         };
+
+    public static Book ToBook(this UpdateBookRequest request) =>
+        new()
+        {
+            Authors = request.Authors,
+            Title = request.Title,
+            Description = request.Description,
+            Year = request.Year,
+        };
 }

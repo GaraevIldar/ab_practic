@@ -1,4 +1,5 @@
-﻿using PracticalWork.Library.Abstractions.Storage;
+﻿using Microsoft.EntityFrameworkCore;
+using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
@@ -36,9 +37,48 @@ public sealed class BookRepository : IBookRepository
         return entity.Id;
     }
 
-    public async Task UpdateBook(Guid id)
+    public async Task<Guid> UpdateBook(Book book)
     {
-        AbstractBookEntity book = await _appDbContext.Books.FindAsync(id);
+        var existingEntity = await FindBookByIdAsync(book.Id);
+        if (existingEntity == null)
+            throw new ArgumentException($"Книга с ID {book.Id} не найдена");
         
+        if (!IsCategoryCompatible(existingEntity, book.Category))
+            throw new InvalidOperationException("Несовместимое изменение категории книги");
+        
+        existingEntity.Title = book.Title;
+        existingEntity.Description = book.Description;
+        existingEntity.Year = book.Year;
+        existingEntity.Authors = book.Authors;
+        existingEntity.Status = book.Status;
+        existingEntity.CoverImagePath = book.CoverImagePath;
+        
+        await _appDbContext.SaveChangesAsync();
+
+        return existingEntity.Id;
+    }
+
+    private async Task<AbstractBookEntity> FindBookByIdAsync(Guid id)
+    {
+        var scientificBook = await _appDbContext.ScientificBooks
+            .FirstOrDefaultAsync(b => b.Id == id);
+        if (scientificBook != null) return scientificBook;
+
+        var fictionBook = await _appDbContext.FictionBooks
+            .FirstOrDefaultAsync(b => b.Id == id);
+        if (fictionBook != null) return fictionBook;
+
+        var educationalBook = await _appDbContext.EducationalBooks
+            .FirstOrDefaultAsync(b => b.Id == id);
+        if (educationalBook != null) return educationalBook;
+
+        return null;
+    }
+
+    private bool IsCategoryCompatible(AbstractBookEntity entity, BookCategory category)
+    {
+        return (entity is ScientificBookEntity && category == BookCategory.ScientificBook) ||
+               (entity is FictionBookEntity && category == BookCategory.FictionBook) ||
+               (entity is EducationalBookEntity && category == BookCategory.EducationalBook);
     }
 }

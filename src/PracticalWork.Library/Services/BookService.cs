@@ -28,5 +28,16 @@ public sealed class BookService : IBookService
             throw new BookServiceException("Ошибка создание книги!", ex);
         }
     }
-    
+
+    public async Task<Guid> UpdateBook(Book book)
+    {
+        try
+        {
+            return await _bookRepository.UpdateBook(book);
+        }
+        catch (Exception ex)
+        {
+            throw new BookServiceException("Ошибка редактирования книги", ex);
+        }
+    }
 }

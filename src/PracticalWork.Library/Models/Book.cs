@@ -7,6 +7,7 @@ namespace PracticalWork.Library.Models;
 /// </summary>
 public sealed class Book
 {
+    public Guid Id { get; set; }
     /// <summary>Название книги</summary>
     public string Title { get; set; }
 

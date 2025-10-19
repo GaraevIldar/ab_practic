@@ -5,4 +5,5 @@ namespace PracticalWork.Library.Abstractions.Storage;
 public interface IBookRepository
 {
     Task<Guid> CreateBook(Book book);
+    Task<Guid> UpdateBook(Book book);
 }
