@@ -54,7 +54,7 @@ public class Startup
         });
 
         services.AddDomain();
-        services.AddCache(Configuration);
+        // services.AddCache(Configuration);
         services.AddMinioFileStorage(Configuration);
     }
 
@@ -62,6 +62,17 @@ public class Startup
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime lifetime,
         ILogger logger, IServiceProvider serviceProvider)
     {
+        try
+        {
+            logger.LogInformation("Applying database migrations...");
+            MigrationsRunner.ApplyMigrations(logger, serviceProvider, "Library API").GetAwaiter().GetResult();
+            logger.LogInformation("Database migrations applied successfully");
+        }
+        catch (Exception ex)
+        {
+            logger.LogCritical(ex, "Failed to apply database migrations");
+            throw;
+        }
         app.UsePathBase(new PathString(_basePath));
 
         app.UseRouting();

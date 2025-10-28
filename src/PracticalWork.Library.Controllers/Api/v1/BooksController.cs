@@ -44,7 +44,19 @@ public class BooksController : Controller
     [ServiceFilter(typeof(GenericValidationFilter<UpdateBookRequest>))]
     public async Task<IActionResult> UpdateBook(Guid id, UpdateBookRequest request)
     {
-        var result = await _bookService.UpdateBook(request.ToBook());
+        var result = await _bookService.UpdateBook(id, request.ToBook());
+        
+        return Content(result.ToString());
+    }
+    
+    [HttpPost("{id}/archive")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(ArchiveBookResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> MoveToArchive(Guid id)
+    {
+        var result = await _bookService.MoveToArchive(id);
         
         return Content(result.ToString());
     }

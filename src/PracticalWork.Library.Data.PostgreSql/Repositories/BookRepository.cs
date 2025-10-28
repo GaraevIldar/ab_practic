@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PracticalWork.Library.Abstractions.Storage;
+using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
@@ -37,24 +38,24 @@ public sealed class BookRepository : IBookRepository
         return entity.Id;
     }
 
-    public async Task<Guid> UpdateBook(Book book)
+    public async Task<Guid> UpdateBook(Guid id, Book book)
     {
-        var existingEntity = await FindBookByIdAsync(book.Id);
+        var existingEntity = await FindBookByIdAsync(id);
         if (existingEntity == null)
-            throw new ArgumentException($"Книга с ID {book.Id} не найдена");
+            throw new ArgumentException($"Книга с ID {id} не найдена");
         
-        if (!IsCategoryCompatible(existingEntity, book.Category))
-            throw new InvalidOperationException("Несовместимое изменение категории книги");
+        if(existingEntity.Status == BookStatus.Archived)
+            throw new InvalidOperationException($"Нельзя изменять книгу с ID {id}, так как она находится в архиве");
+            
         
         existingEntity.Title = book.Title;
         existingEntity.Description = book.Description;
         existingEntity.Year = book.Year;
         existingEntity.Authors = book.Authors;
-        existingEntity.Status = book.Status;
-        existingEntity.CoverImagePath = book.CoverImagePath;
         
+        _appDbContext.Update(existingEntity);
         await _appDbContext.SaveChangesAsync();
-
+        
         return existingEntity.Id;
     }
 
@@ -81,4 +82,21 @@ public sealed class BookRepository : IBookRepository
                (entity is FictionBookEntity && category == BookCategory.FictionBook) ||
                (entity is EducationalBookEntity && category == BookCategory.EducationalBook);
     }
+    public async Task<Guid> MoveToArchive(Guid id)
+    {
+        var existingEntity = await FindBookByIdAsync(id);
+        if (existingEntity == null)
+            throw new ArgumentException($"Книга с ID {id} не найдена");
+        
+        if(existingEntity.Status == BookStatus.Archived)
+            throw new InvalidOperationException($"Нельзя переместить книгу с ID {id}, так как она уже находится в архиве"); 
+        
+
+        existingEntity.Status = BookStatus.Archived;
+        
+        await _appDbContext.SaveChangesAsync();
+        
+        return existingEntity.Id;
+    }
+    
 }

@@ -29,11 +29,23 @@ public sealed class BookService : IBookService
         }
     }
 
-    public async Task<Guid> UpdateBook(Book book)
+    public async Task<Guid> UpdateBook(Guid id, Book book)
     {
         try
         {
-            return await _bookRepository.UpdateBook(book);
+            return await _bookRepository.UpdateBook(id, book);
+        }
+        catch (Exception ex)
+        {
+            throw new BookServiceException("Ошибка редактирования книги", ex);
+        }
+    }
+    
+    public async Task<Guid> MoveToArchive(Guid id)
+    {
+        try
+        {
+            return await _bookRepository.MoveToArchive(id);
         }
         catch (Exception ex)
         {

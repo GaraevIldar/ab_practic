@@ -26,6 +26,8 @@ public static class Entry
     private static IServiceCollection AddFilters(this IServiceCollection services)
     {
         services.AddScoped<GenericValidationFilter<CreateBookRequest>>();
+        services.AddScoped<GenericValidationFilter<UpdateBookRequest>>();
+        
         
         return services;
     }
