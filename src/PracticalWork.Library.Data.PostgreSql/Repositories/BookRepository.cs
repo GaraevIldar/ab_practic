@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Request;
+using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
@@ -23,7 +24,8 @@ public sealed class BookRepository : IBookRepository
             BookCategory.ScientificBook => new ScientificBookEntity(),
             BookCategory.EducationalBook => new EducationalBookEntity(),
             BookCategory.FictionBook => new FictionBookEntity(),
-            _ => throw new ArgumentException($"Неподдерживаемая категория книги: {book.Category}", nameof(book.Category))
+            _ => throw new ArgumentException($"Неподдерживаемая категория книги: {book.Category}",
+                nameof(book.Category))
         };
 
         entity.Title = book.Title;
@@ -40,26 +42,26 @@ public sealed class BookRepository : IBookRepository
 
     public async Task<Guid> UpdateBook(Guid id, Book book)
     {
-        var existingEntity = await FindBookByIdAsync(id);
+        var existingEntity = await FindBookById(id);
         if (existingEntity == null)
             throw new ArgumentException($"Книга с ID {id} не найдена");
-        
-        if(existingEntity.Status == BookStatus.Archived)
+
+        if (existingEntity.Status == BookStatus.Archived)
             throw new InvalidOperationException($"Нельзя изменять книгу с ID {id}, так как она находится в архиве");
-            
-        
+
+
         existingEntity.Title = book.Title;
         existingEntity.Description = book.Description;
         existingEntity.Year = book.Year;
         existingEntity.Authors = book.Authors;
-        
+
         _appDbContext.Update(existingEntity);
         await _appDbContext.SaveChangesAsync();
-        
+
         return existingEntity.Id;
     }
 
-    private async Task<AbstractBookEntity> FindBookByIdAsync(Guid id)
+    private async Task<AbstractBookEntity> FindBookById(Guid id)
     {
         var scientificBook = await _appDbContext.ScientificBooks
             .FirstOrDefaultAsync(b => b.Id == id);
@@ -76,27 +78,105 @@ public sealed class BookRepository : IBookRepository
         return null;
     }
 
-    private bool IsCategoryCompatible(AbstractBookEntity entity, BookCategory category)
+    public async Task<ArchiveBookResponse> MoveToArchive(Guid id)
     {
-        return (entity is ScientificBookEntity && category == BookCategory.ScientificBook) ||
-               (entity is FictionBookEntity && category == BookCategory.FictionBook) ||
-               (entity is EducationalBookEntity && category == BookCategory.EducationalBook);
-    }
-    public async Task<Guid> MoveToArchive(Guid id)
-    {
-        var existingEntity = await FindBookByIdAsync(id);
+        var existingEntity = await FindBookById(id);
         if (existingEntity == null)
             throw new ArgumentException($"Книга с ID {id} не найдена");
-        
-        if(existingEntity.Status == BookStatus.Archived)
-            throw new InvalidOperationException($"Нельзя переместить книгу с ID {id}, так как она уже находится в архиве"); 
-        
+
+        if (existingEntity.Status == BookStatus.Archived)
+            throw new InvalidOperationException(
+                $"Нельзя переместить книгу с ID {id}, так как она уже находится в архиве");
+
 
         existingEntity.Status = BookStatus.Archived;
-        
+
         await _appDbContext.SaveChangesAsync();
-        
-        return existingEntity.Id;
+
+        return new ArchiveBookResponse(
+            existingEntity.Id,
+            existingEntity.Title,
+            DateTime.UtcNow
+        );
     }
-    
+
+    public async Task<BookListResponse> GetBooks()
+    {
+        var books = await _appDbContext.Books
+            .OrderBy(b => b.Status)
+            .ToListAsync();
+
+        var response = new BookListResponse()
+        {
+            TotalCount = books.Count,
+            Books = books.Select(b => new BookItemResponse
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Authors = b.Authors,
+                Description = b.Description,
+                Year = b.Year,
+                Status = b.Status.ToString(),
+                CoverImagePath = b.CoverImagePath,
+                Category = b switch
+                {
+                    FictionBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.FictionBook,
+                    EducationalBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.EducationalBook,
+                    ScientificBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.ScientificBook,
+                    _ => (Contracts.v1.Enums.BookCategory)BookCategory.Default
+                }
+            }).ToList()
+
+        };
+        
+
+        return response;
+    }
+    public async Task<BookListResponse> GetBooksNoArchive()
+    {
+        var books = await _appDbContext.Books
+            .Where(b=> b.Status != BookStatus.Archived)
+            .OrderBy(b => b.Status)
+            .ToListAsync();
+
+        var response = new BookListResponse()
+        {
+            TotalCount = books.Count,
+            Books = books.Select(b => new BookItemResponse
+            {
+                Id = b.Id,
+                Title = b.Title,
+                Authors = b.Authors,
+                Description = b.Description,
+                Year = b.Year,
+                Status = b.Status.ToString(),
+                CoverImagePath = b.CoverImagePath,
+                Category = b switch
+                {
+                    FictionBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.FictionBook,
+                    EducationalBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.EducationalBook,
+                    ScientificBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.ScientificBook,
+                    _ => (Contracts.v1.Enums.BookCategory)BookCategory.Default
+                }
+            }).ToList()
+
+        };
+        
+
+        return response;
+    }
+
+    public async Task<bool> IsBookExist(Guid id)
+    {
+        var book = await _appDbContext.Books.FirstOrDefaultAsync(b => b.Id == id);
+        
+        if (book == null) return false;
+
+        return true;
+    }
+    // public async Task<BookDetailsResponse> AddDetails(AddBookDetailsRequest details)
+    // {
+    //     var existingEntity = await FindBookByIdAsync(details.Id);
+    //     return  
+    // }
 }

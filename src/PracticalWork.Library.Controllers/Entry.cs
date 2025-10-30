@@ -27,7 +27,9 @@ public static class Entry
     {
         services.AddScoped<GenericValidationFilter<CreateBookRequest>>();
         services.AddScoped<GenericValidationFilter<UpdateBookRequest>>();
-        
+        services.AddScoped<GenericValidationFilter<AddBookDetailsRequest>>();
+        services.AddScoped<GenericValidationFilter<CreateReaderRequest>>();
+        services.AddScoped<GenericValidationFilter<ExtendReaderRequest>>();
         
         return services;
     }

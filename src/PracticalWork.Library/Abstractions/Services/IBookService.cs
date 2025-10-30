@@ -1,4 +1,5 @@
 ﻿using PracticalWork.Library.Contracts.v1.Books.Request;
+using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Abstractions.Services;
@@ -12,5 +13,7 @@ public interface IBookService
 
     Task<Guid> UpdateBook(Guid id, Book book);
 
-    Task<Guid> MoveToArchive(Guid id);
+    Task<ArchiveBookResponse> MoveToArchive(Guid id);
+    Task<BookListResponse> GetBooks();
+    // Task<BookDetailsResponse> AddDetails(AddBookDetailsRequest details);
 }

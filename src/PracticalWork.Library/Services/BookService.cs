@@ -1,6 +1,7 @@
 ﻿using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Request;
+using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
@@ -41,7 +42,7 @@ public sealed class BookService : IBookService
         }
     }
     
-    public async Task<Guid> MoveToArchive(Guid id)
+    public async Task<ArchiveBookResponse> MoveToArchive(Guid id)
     {
         try
         {
@@ -49,7 +50,31 @@ public sealed class BookService : IBookService
         }
         catch (Exception ex)
         {
-            throw new BookServiceException("Ошибка редактирования книги", ex);
+            throw new BookServiceException("Ошибка перемещения книги в архив", ex);
         }
     }
+    
+    public async Task<BookListResponse> GetBooks()
+    {
+        try
+        {
+            return await _bookRepository.GetBooks();
+        }
+        catch (Exception ex)
+        {
+            throw new BookServiceException("Ошибка перемещения книги в архив", ex);
+        }
+    }
+    
+    // public async Task<BookListResponse> AddDetails(AddBookDetailsRequest details)
+    // {
+    //     try
+    //     {
+    //         return await _bookRepository.AddDetails(details);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         throw new BookServiceException("Ошибка перемещения книги в архив", ex);
+    //     }
+    // }
 }

@@ -53,7 +53,7 @@ public sealed class Book
     /// </summary>
     /// <param name="description"> Краткое описание книги </param>
     /// <param name="coverImagePath"> Путь к изображению обложки </param>
-    public void UpdateDetails(string description, string coverImagePath)
+    public void UpdateDetailф(string description, string coverImagePath)
     {
         Description = description;
         CoverImagePath = coverImagePath;

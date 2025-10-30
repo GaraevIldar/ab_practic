@@ -60,4 +60,25 @@ public class BooksController : Controller
         
         return Content(result.ToString());
     }
+
+    [HttpGet]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(BookListResponse), 200)]
+    public async Task<IActionResult> GetBooks()
+    {
+        var result = await _bookService.GetBooks();
+        
+        return Ok(result);
+    }
+
+    // [HttpPost("{id}/details")]
+    // [Produces("application/json")]
+    // [ProducesResponseType(typeof(BookDetailsResponse), 200)]
+    // [ServiceFilter(typeof(GenericValidationFilter<AddBookDetailsRequestValidator>))]
+    // public async Task<IActionResult> AddDetails(AddBookDetailsRequest request)
+    // {
+    //     var result = await _bookService.AddDetails(AddBookDetailsRequest);
+    //     
+    //     return Ok(result);
+    // }
 }
