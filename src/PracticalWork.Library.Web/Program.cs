@@ -40,7 +40,8 @@ public class Program
 
         var app = builder.Build();
         startup.Configure(app, app.Environment, app.Lifetime, app.Logger, app.Services);
-
+        
+        
         await app.RunAsync();
     }
 

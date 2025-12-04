@@ -49,12 +49,13 @@ public class Startup
         services.AddSwaggerGen(c =>
         {
             c.UseOneOfForPolymorphism();
+            c.OperationFilter<SwaggerFileOperationFilter>();
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "PracticalWork.Library.Contracts.xml"));
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "PracticalWork.Library.Controllers.xml"));
         });
 
         services.AddDomain();
-        // services.AddCache(Configuration);
+        services.AddCache(Configuration); 
         services.AddMinioFileStorage(Configuration);
     }
 

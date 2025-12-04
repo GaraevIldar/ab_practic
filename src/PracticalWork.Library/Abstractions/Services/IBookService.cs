@@ -1,4 +1,4 @@
-﻿using PracticalWork.Library.Contracts.v1.Books.Request;
+﻿using Microsoft.AspNetCore.Http;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Models;
 
@@ -11,9 +11,9 @@ public interface IBookService
     /// </summary>
     Task<Guid> CreateBook(Book book);
 
-    Task<Guid> UpdateBook(Guid id, Book book);
+    Task UpdateBook(Guid id, Book book);
 
-    Task<ArchiveBookResponse> MoveToArchive(Guid id);
+    Task MoveToArchive(Guid id);
     Task<BookListResponse> GetBooks();
-    // Task<BookDetailsResponse> AddDetails(AddBookDetailsRequest details);
+    Task AddBookDetailsAsync(Guid bookId, string description, IFormFile coverFile);
 }

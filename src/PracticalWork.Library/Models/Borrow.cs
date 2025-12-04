@@ -27,6 +27,7 @@ public sealed class Borrow
 
     /// <summary>Статус выдачи (выдана, возвращена, возвращена с просрочкой)</summary>
     public BookIssueStatus Status { get; set; } = BookIssueStatus.Issued;
+    
 
     /// <summary>Дата создания записи</summary>
     public DateTime CreatedAt { get; set; }

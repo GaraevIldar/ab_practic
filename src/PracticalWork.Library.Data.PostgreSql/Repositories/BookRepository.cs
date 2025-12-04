@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PracticalWork.Library.Abstractions.Storage;
-using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.PostgreSql.Entities;
-using PracticalWork.Library.Enums;
+using PracticalWork.Library.Data.PostgreSql.Extensions.Mappers;
+using PracticalWork.Library.Contracts.v1.Enums;
 using PracticalWork.Library.Models;
+
 
 namespace PracticalWork.Library.Data.PostgreSql.Repositories;
 
@@ -40,64 +41,43 @@ public sealed class BookRepository : IBookRepository
         return entity.Id;
     }
 
-    public async Task<Guid> UpdateBook(Guid id, Book book)
+    public async Task UpdateBook(Guid id, Book book)
     {
-        var existingEntity = await FindBookById(id);
-        if (existingEntity == null)
-            throw new ArgumentException($"Книга с ID {id} не найдена");
+        var entity = await _appDbContext.Books.FindAsync(id);
 
-        if (existingEntity.Status == BookStatus.Archived)
-            throw new InvalidOperationException($"Нельзя изменять книгу с ID {id}, так как она находится в архиве");
+        entity.Title = book.Title;
+        entity.Description = book.Description;
+        entity.Year = book.Year;
+        entity.Authors = book.Authors;
+        entity.Status = book.Status;
+        entity.UpdatedAt = DateTime.UtcNow;
+        if (book.CoverImagePath != null)
+        {
+            entity.CoverImagePath = book.CoverImagePath;
+        }
 
+        _appDbContext.Update(entity);
+        
 
-        existingEntity.Title = book.Title;
-        existingEntity.Description = book.Description;
-        existingEntity.Year = book.Year;
-        existingEntity.Authors = book.Authors;
+        await _appDbContext.SaveChangesAsync();
+    }
+
+    public async Task<Book> GetBookById(Guid id)
+    {
+        var book = await _appDbContext.Books
+            .SingleOrDefaultAsync(b => b.Id == id);
+
+        return book.ToBook();
+    }
+    public async Task MoveToArchive(Guid id)
+    {
+        var existingEntity = await GetBookById(id);
+        
+        existingEntity.Status = (Enums.BookStatus)BookStatus.Archived;
 
         _appDbContext.Update(existingEntity);
+        
         await _appDbContext.SaveChangesAsync();
-
-        return existingEntity.Id;
-    }
-
-    private async Task<AbstractBookEntity> FindBookById(Guid id)
-    {
-        var scientificBook = await _appDbContext.ScientificBooks
-            .FirstOrDefaultAsync(b => b.Id == id);
-        if (scientificBook != null) return scientificBook;
-
-        var fictionBook = await _appDbContext.FictionBooks
-            .FirstOrDefaultAsync(b => b.Id == id);
-        if (fictionBook != null) return fictionBook;
-
-        var educationalBook = await _appDbContext.EducationalBooks
-            .FirstOrDefaultAsync(b => b.Id == id);
-        if (educationalBook != null) return educationalBook;
-
-        return null;
-    }
-
-    public async Task<ArchiveBookResponse> MoveToArchive(Guid id)
-    {
-        var existingEntity = await FindBookById(id);
-        if (existingEntity == null)
-            throw new ArgumentException($"Книга с ID {id} не найдена");
-
-        if (existingEntity.Status == BookStatus.Archived)
-            throw new InvalidOperationException(
-                $"Нельзя переместить книгу с ID {id}, так как она уже находится в архиве");
-
-
-        existingEntity.Status = BookStatus.Archived;
-
-        await _appDbContext.SaveChangesAsync();
-
-        return new ArchiveBookResponse(
-            existingEntity.Id,
-            existingEntity.Title,
-            DateTime.UtcNow
-        );
     }
 
     public async Task<BookListResponse> GetBooks()
@@ -106,7 +86,7 @@ public sealed class BookRepository : IBookRepository
             .OrderBy(b => b.Status)
             .ToListAsync();
 
-        var response = new BookListResponse()
+        return new BookListResponse()
         {
             TotalCount = books.Count,
             Books = books.Select(b => new BookItemResponse
@@ -126,16 +106,12 @@ public sealed class BookRepository : IBookRepository
                     _ => (Contracts.v1.Enums.BookCategory)BookCategory.Default
                 }
             }).ToList()
-
         };
-        
-
-        return response;
     }
     public async Task<BookListResponse> GetBooksNoArchive()
     {
         var books = await _appDbContext.Books
-            .Where(b=> b.Status != BookStatus.Archived)
+            .Where(b=> b.Status != (Enums.BookStatus)BookStatus.Archived)
             .OrderBy(b => b.Status)
             .ToListAsync();
 
@@ -174,9 +150,21 @@ public sealed class BookRepository : IBookRepository
 
         return true;
     }
-    // public async Task<BookDetailsResponse> AddDetails(AddBookDetailsRequest details)
-    // {
-    //     var existingEntity = await FindBookByIdAsync(details.Id);
-    //     return  
-    // }
+    public async Task<Book> GetBookByTitle(string title)
+    {
+        var entity = await _appDbContext.Books
+            .FirstOrDefaultAsync(b => b.Title.ToLower() == title.ToLower());
+
+        return entity?.ToBook();
+    }
+
+    public async Task UpdateBookDetailsAsync(Guid bookId, string description, string coverPath)
+    {
+        var book = await GetBookById(bookId);
+
+        book.Description = description;
+        book.CoverPath = coverPath;
+
+        await UpdateBook(bookId, book);
+    }
 }

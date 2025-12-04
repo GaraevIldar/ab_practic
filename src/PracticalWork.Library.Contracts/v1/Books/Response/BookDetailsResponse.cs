@@ -13,7 +13,6 @@ namespace PracticalWork.Library.Contracts.v1.Books.Response;
 /// <param name="Description">Краткое описание книги</param>
 /// <param name="Year">Год издания</param>
 /// <param name="CoverImagePath">Путь к изображению обложки</param>
-/// <param name="Status">Статус</param>
 /// <param name="IsArchived">В архиве</param>
 public sealed record BookDetailsResponse(
     Guid Id,
@@ -23,6 +22,5 @@ public sealed record BookDetailsResponse(
     string Description,
     int Year,
     string CoverImagePath,
-    BookStatus Status,
     bool IsArchived
 ) : AbstractBook(Title, Authors, Description, Year);

@@ -4,44 +4,33 @@ using Npgsql;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.PostgreSql.Entities;
+using PracticalWork.Library.Data.PostgreSql.Extensions.Mappers;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Exceptions;
+using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Data.PostgreSql.Repositories;
 
 public class LibraryRepository: ILibraryRepository
 {
     private readonly AppDbContext _appDbContext;
-    private readonly IReaderRepository _readerRepository;
-    private readonly IBookRepository _bookRepository;
 
-    public LibraryRepository(AppDbContext appDbContext,
-        IReaderRepository readerRepository, 
-        IBookRepository bookRepository)
+    public LibraryRepository(AppDbContext appDbContext)
     {
         _appDbContext = appDbContext;
-        _readerRepository = readerRepository;
-        _bookRepository = bookRepository;
     }
-    
+    public async Task<Borrow> GetBookBorrow(Guid bookId)
+    {
+        var borrow = await _appDbContext.BookBorrows
+            .SingleOrDefaultAsync(b => b.BookId == bookId);
+        return borrow.ToBookBorrow();
+    }
     public async Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId)
     {
-        var readerExists = await _readerRepository.IsReaderExist(readerId);
-        var bookExists = await _bookRepository.IsBookExist(bookId);
-
-        if (!readerExists || !bookExists)
-            throw new InvalidOperationException("Читатель или книга не найдены");
-        
         
         var book = await _appDbContext.Books.FirstOrDefaultAsync(b => b.Id == bookId);
         
         var reader = await _appDbContext.Readers.FirstOrDefaultAsync(r => r.Id == readerId);
-
-        if (book.Status != BookStatus.Available) 
-            throw new InvalidOperationException("Книга находится в архиве или уже выдана");
-
-        if (!reader.IsActive)
-            throw new InvalidOperationException("Карточка читателя неактивна");
 
         var borrow = new BookBorrowEntity()
         {
@@ -65,9 +54,7 @@ public class LibraryRepository: ILibraryRepository
     public async Task<ReturnBookResponse> ReturnBook(Guid bookId)
     {
         var book = await _appDbContext.BookBorrows.FirstOrDefaultAsync(b => b.Id == bookId);
-
-        if (book == null)
-            throw new InvalidOperationException("Нет записи о выдачи");
+        
 
         book.Status = BookIssueStatus.Returned;
         book.ReturnDate = DateOnly.FromDateTime(DateTime.Now);
@@ -76,4 +63,5 @@ public class LibraryRepository: ILibraryRepository
         
         return new ReturnBookResponse(book.Id);
     }
+    
 }

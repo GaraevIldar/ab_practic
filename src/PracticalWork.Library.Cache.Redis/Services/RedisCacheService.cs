@@ -1,36 +1,48 @@
 #nullable enable
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
+using PracticalWork.Library.Abstractions.Services;
+using StackExchange.Redis;
 
 namespace PracticalWork.Library.Cache.Redis;
 
 public class RedisCacheService : ICacheService
 {
     private readonly IDistributedCache _cache;
-
-    public RedisCacheService(IDistributedCache cache)
+    private readonly IConnectionMultiplexer _redis;
+    public RedisCacheService(IDistributedCache cache, IConnectionMultiplexer redis)
     {
         _cache = cache;
+        _redis = redis;
     }
-
-    public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
-    {
-        var options = new DistributedCacheEntryOptions();
-        if (expiration.HasValue)
-            options.AbsoluteExpirationRelativeToNow = expiration;
-
-        var json = JsonSerializer.Serialize(value);
-        await _cache.SetStringAsync(key, json, options);
-    }
-
     public async Task<T?> GetAsync<T>(string key)
     {
-        var json = await _cache.GetStringAsync(key);
-        return json is null ? default : JsonSerializer.Deserialize<T>(json);
+        var cached = await _cache.GetStringAsync(key);
+        return cached == null ? default : JsonSerializer.Deserialize<T>(cached);
     }
 
-    public async Task RemoveAsync(string key)
+    public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null)
+    {
+        var serialized = JsonSerializer.Serialize(value);
+        var options = new DistributedCacheEntryOptions();
+        
+        if (expiry.HasValue)
+        {
+            options.AbsoluteExpirationRelativeToNow = expiry;
+        }
+
+        await _cache.SetStringAsync(key, serialized, options);
+    }
+
+    public async Task<bool> RemoveAsync(string key)
     {
         await _cache.RemoveAsync(key);
+        return true;
+    }
+
+    public async Task<bool> ExistsAsync(string key)
+    {
+        var value = await _cache.GetStringAsync(key);
+        return value != null;
     }
 }

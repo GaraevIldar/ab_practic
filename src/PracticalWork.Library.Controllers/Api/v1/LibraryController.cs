@@ -13,12 +13,13 @@ namespace PracticalWork.Library.Controllers.Api.v1;
 public class LibraryController: ControllerBase
 {
     private readonly ILibraryService _libraryService;
-
+    
     public LibraryController(ILibraryService libraryService)
     {
         _libraryService = libraryService;
     }
 
+    /// <summary> Получение книги</summary>
     [HttpPost("borrow")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(BorrowBookResponse), 200)]
@@ -31,6 +32,7 @@ public class LibraryController: ControllerBase
         return Content(result.ToString());
     }
 
+    /// <summary> Получение всех книги</summary>
     [HttpGet("books")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(BookListResponse), 200)]
@@ -41,9 +43,9 @@ public class LibraryController: ControllerBase
         return Ok(result);
     }
 
+    /// <summary> Возврат книги</summary>
     [HttpPost("return")]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(ReturnBookResponse), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(500)]
     public async Task<IActionResult> ReturnBook(ReturnBookRequest request)
@@ -53,4 +55,11 @@ public class LibraryController: ControllerBase
         return Content(result.ToString());
     }
     
+    /// <summary> Получение деталей книги</summary>
+    [HttpGet("library/books/{idOrTitle}/details")]
+    public async Task<IActionResult> GetBookDetails(string idOrTitle)
+    {
+        var result = await _libraryService.GetBookDetailsAsync(idOrTitle);
+        return Ok(result);
+    }
 }

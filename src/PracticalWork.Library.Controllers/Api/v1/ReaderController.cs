@@ -23,6 +23,7 @@ public class ReaderController : Controller
         _readerService = readerService;
     }
 
+    /// <summary> Создание читателя</summary>
     [HttpPost]
     [Produces("application/json")]
     [ProducesResponseType(typeof(CreateReaderResponse), 200)]
@@ -36,6 +37,7 @@ public class ReaderController : Controller
         return Content(result.ToString());
     }
 
+    /// <summary> Обновление времени карточки читателя</summary>
     [HttpPost("{id}/extend")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(ExtendReaderResponse), 200)]
@@ -49,6 +51,7 @@ public class ReaderController : Controller
         return Content(result.ToString());
     }
     
+    /// <summary> Закрытие карточки читателя</summary>
     [HttpPost("{id}/close")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(CloseReaderCardResponse), 200)]

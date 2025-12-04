@@ -15,11 +15,11 @@ public class ReaderService: IReaderService
     {
         _repository = repository;
     }
-    public async Task<Guid> CreateReader(Reader book)
+    public async Task<Guid> CreateReader(Reader reader)
     {
         try
         {
-            return await _repository.CreateReader(book);
+            return await _repository.CreateReader(reader);
         }
         catch (Exception ex)
         {

@@ -7,5 +7,6 @@ public interface ILibraryService
     Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId);
     Task<BookListResponse> GetBooksNoArchive();
     Task<ReturnBookResponse> ReturnBook(Guid bookId);
-    // Task<BookDetailsResponse> GetBookDetails(string idOrTitle);
+
+    Task<BookDetailsResponse> GetBookDetailsAsync(string idOrTitle);
 }

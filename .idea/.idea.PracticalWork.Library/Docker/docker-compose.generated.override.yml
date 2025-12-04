@@ -1,0 +1,20 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  web:
+    build:
+      context: "D:\\ITIS\\ab\\ab_practic"
+      dockerfile: "src/PracticalWork.Library.Web/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/PracticalWork.Library.Web.dll"
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "practicalwork.library.web:dev"
+    ports: []
+    volumes:
+    - "C:\\Users\\garae\\.nuget\\packages:/root/.nuget/packages"
+    - "D:\\ITIS\\ab\\ab_practic\\src\\PracticalWork.Library.Web:/app:rw"
+    - "D:\\ITIS\\ab\\ab_practic:/src:rw"
+    working_dir: "/app"

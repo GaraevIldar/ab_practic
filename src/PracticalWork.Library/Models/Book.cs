@@ -1,4 +1,5 @@
 ﻿using PracticalWork.Library.Enums;
+using BookCategory = PracticalWork.Library.Contracts.v1.Enums.BookCategory;
 
 namespace PracticalWork.Library.Models;
 
@@ -32,6 +33,8 @@ public sealed class Book
     /// <summary>В архиве</summary>
     public bool IsArchived { get; set; }
 
+    public string CoverPath { get; set; }
+
     /// <summary>Проверка перевода в архив</summary>
     public bool CanBeArchived() => Status != BookStatus.Borrow;
 
@@ -53,7 +56,7 @@ public sealed class Book
     /// </summary>
     /// <param name="description"> Краткое описание книги </param>
     /// <param name="coverImagePath"> Путь к изображению обложки </param>
-    public void UpdateDetailф(string description, string coverImagePath)
+    public void UpdateDetail(string description, string coverImagePath)
     {
         Description = description;
         CoverImagePath = coverImagePath;
