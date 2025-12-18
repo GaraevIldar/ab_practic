@@ -3,6 +3,7 @@ using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.PostgreSql.Entities;
+using PracticalWork.Library.Data.PostgreSql.Extensions.Mappers;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 
@@ -64,7 +65,7 @@ public class ReaderRepository: IReaderRepository
         return true;
     }
 
-    public async Task<CloseReaderCardResponse> CloseReaderCard(Guid id)
+    public async Task<Guid> CloseReaderCard(Guid id)
     {
         var reader = await _dbContext.Readers.FirstOrDefaultAsync(r => r.Id == id);
         
@@ -89,6 +90,22 @@ public class ReaderRepository: IReaderRepository
         
         await _dbContext.SaveChangesAsync();
 
-        return new CloseReaderCardResponse(id);
+        return id;
+    }
+
+    public async Task<IList<Book>> GetReaderBooks(Guid readerId)
+    {
+        var books = await _dbContext.BookBorrows
+            .Where(b => b.ReaderId == readerId)
+            .Join(
+                _dbContext.Books,
+                borrow => borrow.BookId,
+                bookEntity => bookEntity.Id,
+                (borrow, bookEntity) => bookEntity
+            )
+            .Select(b => b.ToBook()) 
+            .ToListAsync();
+
+        return books;
     }
 }

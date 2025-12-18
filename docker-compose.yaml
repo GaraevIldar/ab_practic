@@ -9,7 +9,7 @@ services:
       - "8081:8081"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=BookArchiveDb;Username=postgres;Password=myhome1861"
+      ConnectionStrings__Postgres: "Host=postgres;Port=5433;Database=BookArchiveDb;Username=postgres;Password=myhome1861"
       Redis__Configuration: "redis:6379"
       Minio__Endpoint: "minio:9000"
       Minio__AccessKey: "minioadmin"
@@ -31,7 +31,7 @@ services:
       POSTGRES_PASSWORD: myhome1861
       POSTGRES_DB: BookArchiveDb
     ports:
-      - "5432:5432" 
+      - "5433:5432" 
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:  

@@ -22,12 +22,11 @@ public class LibraryRepository: ILibraryRepository
     public async Task<Borrow> GetBookBorrow(Guid bookId)
     {
         var borrow = await _appDbContext.BookBorrows
-            .SingleOrDefaultAsync(b => b.BookId == bookId);
+            .FirstOrDefaultAsync(b => b.BookId == bookId);
         return borrow.ToBookBorrow();
     }
-    public async Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId)
+    public async Task<Guid> BorrowBook(Guid bookId, Guid readerId)
     {
-        
         var book = await _appDbContext.Books.FirstOrDefaultAsync(b => b.Id == bookId);
         
         var reader = await _appDbContext.Readers.FirstOrDefaultAsync(r => r.Id == readerId);
@@ -48,20 +47,20 @@ public class LibraryRepository: ILibraryRepository
         
         await _appDbContext.SaveChangesAsync();
 
-        return new BorrowBookResponse(borrow.Id);
+        return borrow.Id;
     }
 
-    public async Task<ReturnBookResponse> ReturnBook(Guid bookId)
+    public async Task<Guid> ReturnBook(Guid bookId)
     {
-        var book = await _appDbContext.BookBorrows.FirstOrDefaultAsync(b => b.Id == bookId);
+        var borrow = await _appDbContext.BookBorrows.FirstOrDefaultAsync(b => b.BookId == bookId);
         
 
-        book.Status = BookIssueStatus.Returned;
-        book.ReturnDate = DateOnly.FromDateTime(DateTime.Now);
+        borrow.Status = BookIssueStatus.Returned;
+        borrow.ReturnDate = DateOnly.FromDateTime(DateTime.Now);
         
         await _appDbContext.SaveChangesAsync();
         
-        return new ReturnBookResponse(book.Id);
+        return borrow.BookId;
     }
     
 }

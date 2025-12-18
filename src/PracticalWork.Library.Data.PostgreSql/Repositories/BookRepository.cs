@@ -71,7 +71,7 @@ public sealed class BookRepository : IBookRepository
     }
     public async Task MoveToArchive(Guid id)
     {
-        var existingEntity = await GetBookById(id);
+        var existingEntity = await _appDbContext.Books.FindAsync(id);
         
         existingEntity.Status = (Enums.BookStatus)BookStatus.Archived;
 

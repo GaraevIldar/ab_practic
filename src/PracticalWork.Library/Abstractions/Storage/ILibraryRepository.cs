@@ -5,7 +5,7 @@ namespace PracticalWork.Library.Abstractions.Storage;
 
 public interface ILibraryRepository
 {
-    Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId);
-    Task<ReturnBookResponse> ReturnBook(Guid bookId);
+    Task<Guid> BorrowBook(Guid bookId, Guid readerId);
+    Task<Guid> ReturnBook(Guid bookId);
     Task<Borrow> GetBookBorrow(Guid bookId);
 }

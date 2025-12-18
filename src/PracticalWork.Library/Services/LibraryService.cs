@@ -44,7 +44,14 @@ public class LibraryService : ILibraryService
             throw new BookServiceException("Книга не найдена");
         try
         {
-            return await _libraryRepository.BorrowBook(bookId, readerId);
+            var book = await _bookRepository.GetBookById(bookId);
+            if (book.Status  == Enums.BookStatus.Available)
+            {
+                var id = await _libraryRepository.BorrowBook(bookId, readerId);
+                return new BorrowBookResponse(id);
+            }
+            else 
+                throw new LibraryServiceException("Нельзя выдать книгу, т.к. она уже выдана или в архиве");
         }
         catch (Exception ex)
         {
@@ -82,7 +89,8 @@ public class LibraryService : ILibraryService
             throw new InvalidOperationException("Нет записи о выдачи");
         try
         {
-            return await _libraryRepository.ReturnBook(bookId);
+            var id = await _libraryRepository.ReturnBook(bookId);
+            return new ReturnBookResponse(id);
         }
         catch (Exception ex)
         {

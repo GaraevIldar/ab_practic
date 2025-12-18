@@ -76,7 +76,7 @@ public class BooksController : Controller
     [ServiceFilter(typeof(GenericValidationFilter<AddBookDetailsRequest>))]
     public async Task<IActionResult> AddDetails([FromForm] AddBookDetailsRequest request)
     {
-        await _bookService.AddBookDetailsAsync(request.Id, request.Description, request.CoverImage);
+        await _bookService.AddBookDetails(request.Id, request.Description, request.CoverImage);
         return Ok();
     }
 }

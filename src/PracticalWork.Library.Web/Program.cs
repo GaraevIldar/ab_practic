@@ -27,7 +27,14 @@ public class Program
     [UsedImplicitly]
     public static async Task RunWebApplication(string[] args)
     {
+        
         var builder = WebApplication.CreateBuilder(args);
+        
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(8080); 
+        });
+
 
         builder.Configuration.Sources.Clear();
         builder.Configuration
