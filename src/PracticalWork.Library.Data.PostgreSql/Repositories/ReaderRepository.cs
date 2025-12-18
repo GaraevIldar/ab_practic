@@ -57,7 +57,9 @@ public class ReaderRepository: IReaderRepository
 
     public async Task<bool> IsReaderExist(Guid id)
     {
-        var reader = await _dbContext.Readers.FirstOrDefaultAsync(r => r.Id == id);
+        var reader = await _dbContext.Readers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == id);
         
         if (reader == null)
             return false;
@@ -96,6 +98,7 @@ public class ReaderRepository: IReaderRepository
     public async Task<IList<Book>> GetReaderBooks(Guid readerId)
     {
         var books = await _dbContext.BookBorrows
+            .AsNoTracking()
             .Where(b => b.ReaderId == readerId)
             .Join(
                 _dbContext.Books,

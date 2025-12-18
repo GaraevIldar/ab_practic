@@ -22,6 +22,7 @@ public class LibraryRepository: ILibraryRepository
     public async Task<Borrow> GetBookBorrow(Guid bookId)
     {
         var borrow = await _appDbContext.BookBorrows
+            .AsNoTracking()
             .FirstOrDefaultAsync(b => b.BookId == bookId);
         return borrow.ToBookBorrow();
     }

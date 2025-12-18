@@ -65,6 +65,7 @@ public sealed class BookRepository : IBookRepository
     public async Task<Book> GetBookById(Guid id)
     {
         var book = await _appDbContext.Books
+            .AsNoTracking()
             .SingleOrDefaultAsync(b => b.Id == id);
 
         return book.ToBook();
@@ -83,6 +84,7 @@ public sealed class BookRepository : IBookRepository
     public async Task<BookListResponse> GetBooks()
     {
         var books = await _appDbContext.Books
+            .AsNoTracking()
             .OrderBy(b => b.Status)
             .ToListAsync();
 
@@ -111,6 +113,7 @@ public sealed class BookRepository : IBookRepository
     public async Task<BookListResponse> GetBooksNoArchive()
     {
         var books = await _appDbContext.Books
+            .AsNoTracking()
             .Where(b=> b.Status != (Enums.BookStatus)BookStatus.Archived)
             .OrderBy(b => b.Status)
             .ToListAsync();
@@ -144,7 +147,9 @@ public sealed class BookRepository : IBookRepository
 
     public async Task<bool> IsBookExist(Guid id)
     {
-        var book = await _appDbContext.Books.FirstOrDefaultAsync(b => b.Id == id);
+        var book = await _appDbContext.Books
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == id);
         
         if (book == null) return false;
 

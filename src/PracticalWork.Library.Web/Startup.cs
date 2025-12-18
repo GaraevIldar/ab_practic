@@ -5,6 +5,7 @@ using PracticalWork.Library.Cache.Redis;
 using PracticalWork.Library.Controllers;
 using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Data.PostgreSql;
+using PracticalWork.Library.Data.
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Web.Configuration;
 using System.Text.Json.Serialization;
@@ -53,10 +54,11 @@ public class Startup
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "PracticalWork.Library.Contracts.xml"));
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "PracticalWork.Library.Controllers.xml"));
         });
-
+        
         services.AddDomain();
         services.AddCache(Configuration); 
         services.AddMinioFileStorage(Configuration);
+        
     }
 
     [UsedImplicitly]
