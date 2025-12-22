@@ -15,5 +15,5 @@ public interface IBookService
 
     Task MoveToArchive(Guid id);
     Task<BookListResponse> GetBooks();
-    Task AddBookDetailsAsync(Guid bookId, string description, IFormFile coverFile);
+    Task AddBookDetails(Guid bookId, string description, IFormFile coverFile);
 }

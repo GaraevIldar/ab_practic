@@ -9,11 +9,9 @@ namespace PracticalWork.Library.Cache.Redis;
 public class RedisCacheService : ICacheService
 {
     private readonly IDistributedCache _cache;
-    private readonly IConnectionMultiplexer _redis;
-    public RedisCacheService(IDistributedCache cache, IConnectionMultiplexer redis)
+    public RedisCacheService(IDistributedCache cache)
     {
         _cache = cache;
-        _redis = redis;
     }
     public async Task<T?> GetAsync<T>(string key)
     {

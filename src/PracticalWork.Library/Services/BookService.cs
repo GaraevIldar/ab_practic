@@ -108,7 +108,7 @@ public sealed class BookService : IBookService
             throw new BookServiceException("Ошибка получения книг", ex);
         }
     }
-    public async Task AddBookDetailsAsync(Guid bookId, string description, IFormFile coverFile)
+    public async Task AddBookDetails(Guid bookId, string description, IFormFile coverFile)
     {
         var book = await _bookRepository.GetBookById(bookId);
         if (book == null)

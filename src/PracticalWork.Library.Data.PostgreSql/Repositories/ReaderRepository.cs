@@ -3,6 +3,7 @@ using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.PostgreSql.Entities;
+using PracticalWork.Library.Data.PostgreSql.Extensions.Mappers;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 

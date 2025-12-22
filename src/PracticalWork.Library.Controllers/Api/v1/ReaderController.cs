@@ -63,4 +63,17 @@ public class ReaderController : Controller
         
         return Content(result);
     }
+    
+    /// <summary> Получение всех книг читателя</summary>
+    [HttpGet("{id}/books")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(CloseReaderCardResponse), 200)]
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> GetBooksReaders(Guid id)
+    {
+        var result = await _readerService.GetBooksReaders(id);
+        
+        return Ok(result);
+    }
 }
