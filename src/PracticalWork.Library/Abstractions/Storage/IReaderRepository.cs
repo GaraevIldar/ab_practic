@@ -10,5 +10,6 @@ public interface IReaderRepository
     Task<Guid> UpdateReaderExpiryDateAsync(Guid id, ExtendReaderRequest request);
     Task<bool> IsReaderExist(Guid id);
     Task<Guid> CloseReaderCard(Guid id);
-    Task<IList<Book>> GetReaderBooks(Guid readerId);
+    Task<bool> IsBookBorrowsExist(Guid id);
+    Task<string> GetBookNonReturners(Guid id);
 }

@@ -84,7 +84,7 @@ public sealed class BookRepository : IBookRepository
     public async Task<BookListResponse> GetBooks()
     {
         var books = await _appDbContext.Books
-            .AsNoTracking()
+            .AsNoTracking()   
             .OrderBy(b => b.Status)
             .ToListAsync();
 
@@ -114,7 +114,7 @@ public sealed class BookRepository : IBookRepository
     {
         var books = await _appDbContext.Books
             .AsNoTracking()
-            .Where(b=> b.Status != (Enums.BookStatus)BookStatus.Archived)
+            .Where(b=> b.Status != Enums.BookStatus.Archived)
             .OrderBy(b => b.Status)
             .ToListAsync();
 

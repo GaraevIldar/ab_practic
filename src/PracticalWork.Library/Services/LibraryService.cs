@@ -61,8 +61,6 @@ public class LibraryService : ILibraryService
 
     public async Task<BookListResponse> GetBooksNoArchive()
     {
-        
-        
         try
         {
             var cached = await _cacheService.GetAsync<BookListResponse>(BooksCacheKey);

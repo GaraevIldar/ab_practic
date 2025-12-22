@@ -61,7 +61,7 @@ public class ReaderController : Controller
     {
         var result = await _readerService.CloseReaderCard(id);
         
-        return Content(result.ToString());
+        return Content(result);
     }
     
     /// <summary> Получение всех книг читателя</summary>
