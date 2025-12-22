@@ -9,5 +9,7 @@ public interface IReaderRepository
     Task<Guid> CreateReader(Reader book);
     Task<Guid> UpdateReaderExpiryDateAsync(Guid id, ExtendReaderRequest request);
     Task<bool> IsReaderExist(Guid id);
-    Task<CloseReaderCardResponse> CloseReaderCard(Guid id);
+    Task<Guid> CloseReaderCard(Guid id);
+    Task<bool> IsBookBorrowsExist(Guid id);
+    Task<string> GetBookNonReturners(Guid id);
 }

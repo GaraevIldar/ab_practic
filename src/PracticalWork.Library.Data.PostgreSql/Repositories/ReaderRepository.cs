@@ -40,23 +40,21 @@ public class ReaderRepository: IReaderRepository
 
     public async Task<Guid> UpdateReaderExpiryDateAsync(Guid id, ExtendReaderRequest request)
     {
-        var existingReader = await _dbContext.Readers
+        var reader = await _dbContext.Readers
             .FirstOrDefaultAsync(r => r.Id == id);
-        if (existingReader == null)
-        {
-            throw new InvalidOperationException($"Читатель с id {existingReader.Id} не существует");
-        }
 
-        existingReader.ExpiryDate = request.NewExpiryDate;
+        reader.ExpiryDate = request.NewExpiryDate;
         
         await _dbContext.SaveChangesAsync();
         
-        return existingReader.Id;
+        return reader.Id;
     }
 
     public async Task<bool> IsReaderExist(Guid id)
     {
-        var reader = await _dbContext.Readers.FirstOrDefaultAsync(r => r.Id == id);
+        var reader = await _dbContext.Readers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == id);
         
         if (reader == null)
             return false;
@@ -64,31 +62,47 @@ public class ReaderRepository: IReaderRepository
         return true;
     }
 
-    public async Task<CloseReaderCardResponse> CloseReaderCard(Guid id)
+    public async Task<bool> IsBookBorrowsExist(Guid id)
+    {
+        var reader = await _dbContext.Readers.FirstOrDefaultAsync(r => r.Id == id);
+
+        var bookBorrows = await _dbContext.BookBorrows
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.ReaderId == reader.Id && b.Status == BookIssueStatus.Issued);
+        
+       return bookBorrows != null;
+    }
+
+    public async Task<List<BookBorrowEntity>> GetBookBorrows(Guid id)
     {
         var reader = await _dbContext.Readers.FirstOrDefaultAsync(r => r.Id == id);
         
-        if (reader == null)
-            throw new InvalidOperationException($"Читатель с id {id} не существует");
-        
         var bookBorrows = await _dbContext.BookBorrows
+            .AsNoTracking()
             .Where(b => b.ReaderId == reader.Id && b.Status == BookIssueStatus.Issued)
             .ToListAsync();
-
-        if (bookBorrows.Any())
-        {
-            var bookList = bookBorrows
-                .Select(b => $"ID книги: {b.BookId}, Дата взятия: {b.BorrowDate:dd.MM.yyyy}")
-                .ToList();
-            throw new InvalidOperationException($"Читатель с id {id} вернул не все книги:\n" 
-                                                + string.Join("\n", bookList));
-        }
+        
+        return bookBorrows;
+    }
+    public async Task<Guid> CloseReaderCard(Guid id)
+    {
+        var reader = await _dbContext.Readers.FirstOrDefaultAsync(r => r.Id == id);
         
         reader.IsActive = false;
         reader.ExpiryDate = DateOnly.FromDateTime(DateTime.Now);
         
         await _dbContext.SaveChangesAsync();
 
-        return new CloseReaderCardResponse(id);
+        return id;
+    }
+    public async Task<string> GetBookNonReturners(Guid id)
+    {
+        var bookBorrows = await GetBookBorrows(id);
+        
+        var bookList = bookBorrows
+            .Select(b => $"ID книги: {b.BookId}, Дата взятия: {b.BorrowDate:dd.MM.yyyy}")
+            .ToList();
+        return ($"Читатель с id {id} вернул не все книги:\n"
+                                                + string.Join("\n", bookList));
     }
 }

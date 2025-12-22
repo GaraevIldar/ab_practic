@@ -8,5 +8,5 @@ public interface IReaderService
 {
     Task<Guid> CreateReader(Reader reader);
     Task<Guid> ExtendReaderCard(Guid id, ExtendReaderRequest request);
-    Task<CloseReaderCardResponse> CloseReaderCard(Guid id);
+    Task<string> CloseReaderCard(Guid id);
 }
