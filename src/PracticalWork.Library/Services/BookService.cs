@@ -5,6 +5,7 @@ using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Exceptions;
+using PracticalWork.Library.Exceptions.Book;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Services;
@@ -29,18 +30,12 @@ public sealed class BookService : IBookService
     public async Task<Guid> CreateBook(Book book)
     {
         book.Status = BookStatus.Available;
-        try
-        {
-            var id = await _bookRepository.CreateBook(book);
+        
+        var id = await _bookRepository.CreateBook(book);
             
-            await IncreaseCacheVersion();
+        await IncreaseCacheVersion();
 
-            return id;
-        }
-        catch (Exception ex)
-        {
-            throw new BookServiceException("Ошибка создание книги!", ex);
-        }
+        return id;
     }
 
     public async Task UpdateBook(Guid id, Book book)
@@ -48,87 +43,71 @@ public sealed class BookService : IBookService
         var existingEntity = await _bookRepository.GetBookById(id);
         
         if (existingEntity == null)
-            throw new BookServiceException($"Книга с ID {id} не найдена");
+            throw new BookNotFoundException(id);
 
         if (existingEntity.Status == BookStatus.Archived)
-            throw new BookServiceException(
-                $"Нельзя изменять книгу с ID {id}, так как она находится в архиве");
+            throw new BookArchivedException(id);
         
-        try
-        {
-            await _bookRepository.UpdateBook(id, book);
-            
-            await IncreaseCacheVersion();
-        }
-        catch (Exception ex)
-        {
-            throw new BookServiceException("Ошибка редактирования книги", ex);
-        }
+        await _bookRepository.UpdateBook(id, book);
+        await IncreaseCacheVersion();
     }
     
     public async Task MoveToArchive(Guid id)
     {
-        var existingEntity = await _bookRepository.GetBookById(id);
+        var book = await _bookRepository.GetBookById(id);
         
-        if (existingEntity == null)
-            throw new BookServiceException($"Книга с ID {id} не найдена");
-        try
-        { 
-            await _bookRepository.MoveToArchive(id);
+        if (book == null)
+            throw new BookNotFoundException(id);
+
+        if (book.Status == BookStatus.Archived)
+            throw new BookAlreadyArchivedException();
+        
+        if (book.Status == BookStatus.Borrow)
+            throw new BookBorrowedException();
             
-            await IncreaseCacheVersion();
-        }
-        catch (Exception ex)
-        {
-            throw new BookServiceException("Ошибка перемещения книги в архив", ex);
-        }
+        await _bookRepository.MoveToArchive(id);
+        await IncreaseCacheVersion();
     }
     
     public async Task<BookListResponse> GetBooks()
     {
-        try
-        {
-            var cacheKey = await BuildBooksCacheKey();
-            
-            var cached = await _cacheService.GetAsync<BookListResponse>(cacheKey);
-            if (cached != null)
-                return cached;
-            
-            var books = await _bookRepository.GetBooks();
-            
-            await _cacheService.SetAsync(
-                cacheKey,
-                books,
-                TimeSpan.FromMinutes(PageCacheDurationMinutes));
+        var cacheKey = await BuildBooksCacheKey();
 
-            return books;
-        }
-        catch (Exception ex)
-        {
-            throw new BookServiceException("Ошибка получения книг", ex);
-        }
+        var cached = await _cacheService.GetAsync<BookListResponse>(cacheKey);
+        if (cached != null)
+            return cached;
+
+        var books = await _bookRepository.GetBooks();
+
+        await _cacheService.SetAsync(
+            cacheKey,
+            books,
+            TimeSpan.FromMinutes(PageCacheDurationMinutes));
+
+        return books;
     }
     public async Task AddBookDetails(Guid bookId, string description, IFormFile coverFile)
     {
         var book = await _bookRepository.GetBookById(bookId);
+
         if (book == null)
-            throw new BookServiceException($"Книга с ID {bookId} не найдена");
-        
+            throw new BookNotFoundException(bookId);
+
         var ext = Path.GetExtension(coverFile.FileName).ToLower();
-        
         var now = DateTime.UtcNow;
+
         string objectName = $"book-covers/{now:yyyy}/{now:MM}/{bookId}{ext}";
 
-        string path;
-        using (var stream = coverFile.OpenReadStream())
-        {
-            path = await _minioService.UploadFileAsync(objectName, stream, coverFile.ContentType);
-        }
-        
+        using var stream = coverFile.OpenReadStream();
+        var path = await _minioService.UploadFileAsync(
+            objectName,
+            stream,
+            coverFile.ContentType);
+
         book.Description = description;
         book.CoverImagePath = path;
+
         await _bookRepository.UpdateBook(bookId, book);
-        
         await IncreaseCacheVersion();
     }
 

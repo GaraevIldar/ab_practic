@@ -12,4 +12,5 @@ public interface IReaderRepository
     Task<Guid> CloseReaderCard(Guid id);
     Task<bool> IsBookBorrowsExist(Guid id);
     Task<string> GetBookNonReturners(Guid id);
+    Task<IList<Book>> GetReaderBooks(Guid readerId);
 }

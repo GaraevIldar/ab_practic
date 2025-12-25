@@ -65,18 +65,16 @@ public sealed class BookRepository : IBookRepository
     public async Task<Book> GetBookById(Guid id)
     {
         var book = await _appDbContext.Books
-            .AsNoTracking()
-            .SingleOrDefaultAsync(b => b.Id == id);
-
-        return book.ToBook();
+            .FindAsync(id);
+        return book?.ToBook();
     }
     public async Task MoveToArchive(Guid id)
     {
-        var existingEntity = await _appDbContext.Books.FindAsync(id);
+        var book = await _appDbContext.Books.FindAsync(id);
         
-        existingEntity.Status = (Enums.BookStatus)BookStatus.Archived;
-
-        _appDbContext.Update(existingEntity);
+        book.Status = (Enums.BookStatus)BookStatus.Archived;
+        
+        _appDbContext.Update(book);
         
         await _appDbContext.SaveChangesAsync();
     }

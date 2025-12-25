@@ -4,25 +4,29 @@ using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Exceptions;
+using PracticalWork.Library.Exceptions.Book;
+using PracticalWork.Library.Exceptions.Library;
+using PracticalWork.Library.Exceptions.Reader;
 using BookStatus = PracticalWork.Library.Contracts.v1.Enums.BookStatus;
 
 namespace PracticalWork.Library.Services;
 
-public class LibraryService : ILibraryService
+public sealed class LibraryService : ILibraryService
 {
     private readonly ILibraryRepository _libraryRepository;
     private readonly IBookRepository _bookRepository;
     private readonly IReaderRepository _readerRepository;
     private readonly IMinioService _minioService;
     private readonly ICacheService _cacheService;
-    
+
     private const string BooksCacheKey = "books:no-archive";
     private static readonly TimeSpan CacheExpiry = TimeSpan.FromMinutes(5);
 
-    public LibraryService(ILibraryRepository libraryRepository,
-        IBookRepository bookRepository
-        , IReaderRepository readerRepository
-        , IMinioService minioService,
+    public LibraryService(
+        ILibraryRepository libraryRepository,
+        IBookRepository bookRepository,
+        IReaderRepository readerRepository,
+        IMinioService minioService,
         ICacheService cacheService)
     {
         _libraryRepository = libraryRepository;
@@ -34,28 +38,25 @@ public class LibraryService : ILibraryService
 
     public async Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId)
     {
-        var readerExists = await _readerRepository.IsReaderExist(readerId);
-        var bookExists = await _bookRepository.IsBookExist(bookId);
+        if (!await _readerRepository.IsReaderExist(readerId))
+            throw new ReaderNotFoundException(readerId);
 
-        if (!readerExists)
-            throw new ReaderServiceException("Читатель не найден");
-        
-        if (!bookExists)
-            throw new BookServiceException("Книга не найдена");
+        if (!await _bookRepository.IsBookExist(bookId))
+            throw new BookNotFoundException(bookId);
+
+        var book = await _bookRepository.GetBookById(bookId);
+
+        if (book.Status != Enums.BookStatus.Available)
+            throw new BookNotAvailableException();
+
         try
         {
-            var book = await _bookRepository.GetBookById(bookId);
-            if (book.Status  == Enums.BookStatus.Available)
-            {
-                var id = await _libraryRepository.BorrowBook(bookId, readerId);
-                return new BorrowBookResponse(id);
-            }
-            else 
-                throw new LibraryServiceException("Нельзя выдать книгу, т.к. она уже выдана или в архиве");
+            var borrowId = await _libraryRepository.BorrowBook(bookId, readerId);
+            return new BorrowBookResponse(borrowId);
         }
         catch (Exception ex)
         {
-            throw new LibraryServiceException("Ошибка при выдачи книги", ex);
+            throw new LibraryServiceException("Ошибка при выдаче книги", ex);
         }
     }
 
@@ -66,45 +67,47 @@ public class LibraryService : ILibraryService
             var cached = await _cacheService.GetAsync<BookListResponse>(BooksCacheKey);
             if (cached != null)
                 return cached;
-            
-            var booksResponse = await _bookRepository.GetBooksNoArchive();
-            
-            await _cacheService.SetAsync(BooksCacheKey, booksResponse, CacheExpiry);
-            
-            return booksResponse;
+
+            var books = await _bookRepository.GetBooksNoArchive();
+
+            await _cacheService.SetAsync(BooksCacheKey, books, CacheExpiry);
+
+            return books;
         }
         catch (Exception ex)
         {
-            throw new LibraryServiceException("Ошибка при получении книг", ex);
+            throw new LibraryServiceException("Ошибка при получении списка книг", ex);
         }
     }
 
     public async Task<ReturnBookResponse> ReturnBook(Guid bookId)
     {
-        var borrow= await _libraryRepository.GetBookBorrow(bookId);
+        var borrow = await _libraryRepository.GetBookBorrow(bookId);
 
-        if (borrow == null )   
-            throw new InvalidOperationException("Нет записи о выдачи");
+        if (borrow == null)
+            throw new BookBorrowNotFoundException(bookId);
+
         try
         {
-            var id = await _libraryRepository.ReturnBook(bookId);
-            return new ReturnBookResponse(id);
+            var returnId = await _libraryRepository.ReturnBook(bookId);
+            return new ReturnBookResponse(returnId);
         }
         catch (Exception ex)
         {
-            throw new LibraryServiceException("Ошибка при возвращении книги", ex);
+            throw new LibraryServiceException("Ошибка при возврате книги", ex);
         }
     }
+
     public async Task<BookDetailsResponse> GetBookDetailsAsync(string idOrTitle)
     {
         Guid.TryParse(idOrTitle, out var bookId);
-        
+
         var book = bookId != Guid.Empty
             ? await _bookRepository.GetBookById(bookId)
             : await _bookRepository.GetBookByTitle(idOrTitle);
 
         if (book == null)
-            throw new BookServiceException($"Книга с идентификатором или названием '{idOrTitle}' не найдена");
+            throw new BookNotFoundException(book.Id);
 
         string coverUrl = string.IsNullOrEmpty(book.CoverImagePath)
             ? string.Empty
@@ -121,5 +124,4 @@ public class LibraryService : ILibraryService
             IsArchived: book.Status == Enums.BookStatus.Archived
         );
     }
-
 }

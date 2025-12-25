@@ -106,4 +106,21 @@ public class ReaderRepository: IReaderRepository
         return ($"Читатель с id {id} вернул не все книги:\n"
                                                 + string.Join("\n", bookList));
     }
+
+    public async Task<IList<Book>> GetReaderBooks(Guid readerId)
+    {
+        var books = await _dbContext.BookBorrows
+            .AsNoTracking()
+            .Where(b => b.ReaderId == readerId && b.Status == BookIssueStatus.Issued)
+            .Join(
+                _dbContext.Books, 
+                borrow => borrow.BookId,
+                bookEntity => bookEntity.Id,
+                (borrow, bookEntity) => bookEntity
+                )
+            .Select(b => b.ToBook())
+            .ToListAsync();
+
+            return books;
+    }
 }

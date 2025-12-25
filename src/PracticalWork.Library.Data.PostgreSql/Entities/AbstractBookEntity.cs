@@ -22,6 +22,7 @@ public abstract class AbstractBookEntity : EntityBase
 
     /// <summary>Статус</summary>
     public BookStatus Status { get; set; }
+    /// <summary>В архиве</summary>
 
     /// <summary>Путь к изображению обложки</summary>
     public string CoverImagePath { get; set; }

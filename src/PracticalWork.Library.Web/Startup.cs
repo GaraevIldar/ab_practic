@@ -5,10 +5,11 @@ using PracticalWork.Library.Cache.Redis;
 using PracticalWork.Library.Controllers;
 using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Data.PostgreSql;
-using PracticalWork.Library.Data.
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Web.Configuration;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 
 namespace PracticalWork.Library.Web;
 
@@ -26,6 +27,8 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddScoped<DomainExceptionFilter<AppException>>();
+        
         services.AddPostgreSqlStorage(cfg =>
         {
             var npgsqlDataSource = new NpgsqlDataSourceBuilder(Configuration["App:DbConnectionString"])
@@ -37,7 +40,7 @@ public class Startup
 
         services.AddMvc(opt =>
             {
-                opt.Filters.Add<DomainExceptionFilter<AppException>>();
+                opt.Filters.AddService<DomainExceptionFilter<AppException>>();
             })
             .AddApi()
             .AddControllersAsServices()
@@ -77,6 +80,31 @@ public class Startup
             throw;
         }
         app.UsePathBase(new PathString(_basePath));
+
+        app.UseExceptionHandler(errorApp =>
+        {
+            errorApp.Run(async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "application/json";
+
+                var exceptionHandler =
+                    context.Features.Get<IExceptionHandlerFeature>();
+
+                var exception = exceptionHandler?.Error;
+
+                var response = new ValidationProblemDetails
+                {
+                    Title = "Произошла внутренняя ошибка сервера",
+                    Errors =
+                    {
+                        { exception?.GetType().Name ?? "Error", new[] { exception?.Message } }
+                    }
+                };
+
+                await context.Response.WriteAsJsonAsync(response);
+            });
+        });
 
         app.UseRouting();
 

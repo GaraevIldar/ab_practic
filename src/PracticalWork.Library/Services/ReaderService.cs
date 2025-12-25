@@ -2,6 +2,7 @@ using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Exceptions;
+using PracticalWork.Library.Exceptions.Reader;
 using PracticalWork.Library.Models;
 using StackExchange.Redis;
 
@@ -30,35 +31,31 @@ public class ReaderService : IReaderService
 
     public async Task<Guid> ExtendReaderCard(Guid id, ExtendReaderRequest request)
     {
-        var readerExists = await _repository.IsReaderExist(id);
+        if (!await _repository.IsReaderExist(id))
+            throw new ReaderNotFoundException(id);
 
-        if (!readerExists)
-            throw new ReaderServiceException($"Читатель с id {id} не существует");
         try
         {
             return await _repository.UpdateReaderExpiryDateAsync(id, request);
         }
         catch (Exception ex)
         {
-            throw new ReaderServiceException("Ошибка при попытке продлить срок действия карточки читателя", ex);
+            throw new ReaderServiceException(
+                "Ошибка при попытке продлить срок действия карточки читателя", ex);
         }
     }
 
     public async Task<string> CloseReaderCard(Guid id)
     {
-        var readerExists = await _repository.IsReaderExist(id);
+        if (!await _repository.IsReaderExist(id))
+            throw new ReaderNotFoundException(id);
 
-        if (!readerExists)
-            throw new ReaderServiceException($"Читатель с id {id} не существует");
-
-        var borrowBooksExists = await _repository.IsBookBorrowsExist(id);
+        if (await _repository.IsBookBorrowsExist(id))
+            throw new ReaderHasBorrowedBooksException(await _repository.GetBookNonReturners(id));
 
         try
         {
-            if (!borrowBooksExists)
-                return _repository.CloseReaderCard(id).ToString();
-           
-            return await _repository.GetBookNonReturners(id);
+            return (await _repository.CloseReaderCard(id)).ToString();
         }
         catch (Exception ex)
         {
@@ -68,17 +65,17 @@ public class ReaderService : IReaderService
 
     public async Task<IList<Book>> GetBooksReaders(Guid readerId)
     {
-        var readerExists = await _repository.IsReaderExist(readerId);
+        if (!await _repository.IsReaderExist(readerId))
+            throw new ReaderNotFoundException(readerId);
 
-        if (!readerExists)
-            throw new ReaderServiceException("Читатель не найден");
         try
         {
             return await _repository.GetReaderBooks(readerId);
         }
         catch (Exception ex)
         {
-            throw new RedisException("Ошибка при получении книг пользователя", ex);
+            throw new ReaderServiceException(
+                "Ошибка при получении книг читателя", ex);
         }
     }
 }

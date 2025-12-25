@@ -1,6 +1,12 @@
-﻿using JetBrains.Annotations;
+﻿using System.Data.Common;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
+using PracticalWork.Library.Exceptions;
+using PracticalWork.Library.Exceptions.Book;
+using PracticalWork.Library.Exceptions.Library;
+using PracticalWork.Library.Exceptions.Reader;
 
 namespace PracticalWork.Library.Web.Configuration;
 
@@ -31,16 +37,49 @@ public class DomainExceptionFilter<TAppException> : IAsyncActionFilter where TAp
 
     protected virtual void TryHandleException(ActionExecutedContext context, Exception exception)
     {
-        if (exception is not TAppException)
-            return;
+        ObjectResult result;
 
-        var problemDetails = BuildProblemDetails(exception);
+        switch (exception)
+        {
+            case InvalidOperationException:
+                result = new BadRequestObjectResult(BuildProblemDetails(exception));
+                break;
+            
+            case BookNotFoundException:
+            case ReaderNotFoundException:
+            case BookBorrowNotFoundException:
+                result = new NotFoundObjectResult(BuildProblemDetails(exception));
+                break;
+            
+            case BookAlreadyArchivedException:
+            case BookArchivedException:
+            case BookBorrowedException:
+            case BookNotAvailableException:
+            case ReaderHasBorrowedBooksException:
+                result = new ConflictObjectResult(BuildProblemDetails(exception));
+                break;
 
-        context.Result = new BadRequestObjectResult(problemDetails);
+            case BookServiceException:
+            case ReaderServiceException:
+            case LibraryServiceException:
+            case DbUpdateException:
+            case DbException:
+                result = new ObjectResult(BuildProblemDetails(exception))
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError
+                };
+                break;
+
+            default:
+                return;
+        }
+
+        context.Result = result;
         context.ExceptionHandled = true;
-
-        Logger.LogError(exception, "Unhandled domain exception. Transformed to Bad request (400).");
+        Logger.LogError(exception, "Unhandled domain exception transformed to HTTP response.");
     }
+
+
 
     protected static ValidationProblemDetails BuildProblemDetails(Exception exception)
     {
