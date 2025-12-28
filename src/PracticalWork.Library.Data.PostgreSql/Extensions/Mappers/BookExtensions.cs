@@ -20,6 +20,7 @@ public static class BookExtensions
     public static Borrow ToBookBorrow(this BookBorrowEntity entity) =>
         new()
         {
+            Id = entity.Id,
             Status = entity.Status,
             ReturnDate = entity.ReturnDate,
             DueDate = entity.DueDate,

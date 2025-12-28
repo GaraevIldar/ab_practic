@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Configuration;
+using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.Minio;
+using PracticalWork.Library.Events;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Exceptions.Book;
 using PracticalWork.Library.Exceptions.Library;
@@ -23,8 +25,9 @@ public sealed class LibraryService : ILibraryService
     private readonly string _libraryCacheVersion;
     private readonly string _libraryBooksListPrefix;
     private readonly double _libraryBooksTtlInMinutes;
-    private readonly string _booksDetailsPrefix;
-    private readonly double _booksDetailsTtlInMinutes;
+    private readonly IRabbitPublisher _publisher;
+    private readonly IConfigurationSection _rabbitLibrarySection;
+    private readonly string _exchangeName;
 
     public LibraryService(
         ILibraryRepository libraryRepository,
@@ -33,7 +36,8 @@ public sealed class LibraryService : ILibraryService
         IMinioService minioService,
         ICacheService cacheService,
         IBookPaginationService paginationService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IRabbitPublisher rabbitPublisher)
     {
         _libraryRepository = libraryRepository;
         _bookRepository = bookRepository;
@@ -45,8 +49,9 @@ public sealed class LibraryService : ILibraryService
         _libraryCacheVersion = section["VersionKey"];
         _libraryBooksListPrefix = section["LibraryBooks:Prefix"];
         _libraryBooksTtlInMinutes = section.GetValue<double>("LibraryBooks:TtlInMinutes");
-        _booksDetailsPrefix = section["BookDetails:Prefix"];
-        _booksDetailsTtlInMinutes = section.GetValue<double>("BookDetails:TtlInMinutes");
+        _publisher = rabbitPublisher;
+        _rabbitLibrarySection = configuration.GetSection("App:RabbitMQ:Library");
+        _exchangeName = _rabbitLibrarySection["ExchangeName"];
     }
 
     public async Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId)
@@ -64,8 +69,15 @@ public sealed class LibraryService : ILibraryService
 
         try
         {
-            var borrowId = await _libraryRepository.BorrowBook(bookId, readerId);
-            return new BorrowBookResponse(borrowId);
+            var borrow = await _libraryRepository.BorrowBook(bookId, readerId);
+            var readerName = await _readerRepository.GetReaderFullNameById(readerId);
+            var message = new BookBorrowedEvent(bookId, readerId, book.Title, 
+                readerName, borrow.BorrowDate, borrow.DueDate);
+            await _publisher.PublishAsync(
+                _exchangeName,
+                _rabbitLibrarySection["BookBorrow:RoutingKey"],
+                message);
+            return new BorrowBookResponse(borrow.Id);
         }
         catch (Exception ex)
         {
@@ -110,6 +122,14 @@ public sealed class LibraryService : ILibraryService
 
         try
         {
+            var book = await _bookRepository.GetBookById(borrow.BookId);
+            var readerName = await _readerRepository.GetReaderFullNameById(borrow.ReaderId);
+            var message = new BookReturnedEvent(bookId, borrow.ReaderId,book.Title,
+                readerName, borrow.ReturnDate.Value);
+            await _publisher.PublishAsync(
+                _exchangeName, 
+                _rabbitLibrarySection["BookReturn:RoutingKey"], 
+                message);
             var returnId = await _libraryRepository.ReturnBook(bookId);
             return new ReturnBookResponse(returnId);
         }
@@ -133,6 +153,7 @@ public sealed class LibraryService : ILibraryService
         string coverUrl = string.IsNullOrEmpty(book.CoverImagePath)
             ? string.Empty
             : $"https://{_minioService.Endpoint}/{book.CoverImagePath}";
+        
 
         return new BookDetailsResponse(
             Id: book.Id,

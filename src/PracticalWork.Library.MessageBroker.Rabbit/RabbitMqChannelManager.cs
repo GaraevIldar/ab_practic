@@ -25,18 +25,18 @@ public sealed class RabbitMqChannelManager : IRabbitChannelManager, IInitializab
     {
         _log = logger;
 
-        _poolLimit = configuration.GetValue("RabbitMQ:MaxChannelPoolSize", 10);
+        _poolLimit = configuration.GetValue("App:RabbitMQ:MaxChannelPoolSize", 10);
         _semaphore = new SemaphoreSlim(_poolLimit, _poolLimit);
 
-        _connectionName = configuration["RabbitMQ:AppName"]
+        _connectionName = configuration["App:RabbitMQ:AppName"]
                           ?? Guid.NewGuid().ToString();
 
         _connectionFactory = new ConnectionFactory
         {
-            HostName = configuration["RabbitMQ:HostName"] ?? "localhost",
-            UserName = configuration["RabbitMQ:UserName"] ?? "guest",
-            Password = configuration["RabbitMQ:Password"] ?? "guest",
-            Port = configuration.GetValue("RabbitMQ:Port", 5678),
+            HostName = configuration["App:RabbitMQ:Host"] ?? "localhost",
+            UserName = configuration["App:RabbitMQ:User"] ?? "guest",
+            Password = configuration["App:RabbitMQ:Password"] ?? "guest",
+            Port = configuration.GetValue("App:RabbitMQ:Port", 5672),
         };
     }
 

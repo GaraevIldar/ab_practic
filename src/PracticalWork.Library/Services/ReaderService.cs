@@ -1,6 +1,9 @@
+using Microsoft.Extensions.Configuration;
+using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Request;
+using PracticalWork.Library.Events;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Exceptions.Reader;
 using PracticalWork.Library.Models;
@@ -11,17 +14,34 @@ namespace PracticalWork.Library.Services;
 public class ReaderService : IReaderService
 {
     private readonly IReaderRepository _repository;
+    private readonly IRabbitPublisher _publisher;
+    private readonly IConfigurationSection _rabbitLibrarySection;
+    private readonly string _exchangeName;
 
-    public ReaderService(IReaderRepository repository)
+    public ReaderService(
+        IReaderRepository repository,
+        IRabbitPublisher publisher,
+        IConfiguration configuration)
     {
         _repository = repository;
+        _publisher = publisher;
+        _rabbitLibrarySection = configuration.GetSection("App:RabbitMQ:Library");
+        _exchangeName = _rabbitLibrarySection["ExchangeName"];
+        _publisher = publisher;
     }
 
     public async Task<Guid> CreateReader(Reader reader)
     {
         try
         {
-            return await _repository.CreateReader(reader);
+            var idReader = await _repository.CreateReader(reader); 
+            var message = new ReaderCreatedEvent(idReader, reader.FullName,
+                reader.PhoneNumber, DateTime.UtcNow);
+            await _publisher.PublishAsync(
+                _exchangeName, 
+                _rabbitLibrarySection["ReaderCreate:RoutingKey"], 
+                message);
+            return idReader;
         }
         catch (Exception ex)
         {
@@ -55,6 +75,13 @@ public class ReaderService : IReaderService
 
         try
         {
+            var readerFullName = await _repository.GetReaderFullNameById(id);
+            var message = new ReaderClosedEvent(id, readerFullName,
+                DateTime.UtcNow, "Вызван метод закрытия карточки");
+            await _publisher.PublishAsync(
+                _exchangeName, 
+                _rabbitLibrarySection["CloseReader:RoutingKey"], 
+                message);
             return (await _repository.CloseReaderCard(id)).ToString();
         }
         catch (Exception ex)

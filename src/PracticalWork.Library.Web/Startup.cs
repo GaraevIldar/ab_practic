@@ -62,6 +62,7 @@ public class Startup
         services.AddDomain();
         services.AddCache(Configuration); 
         services.AddMinioFileStorage(Configuration);
+        services.AddMessageBroker(Configuration);
     }
 
     [UsedImplicitly]

@@ -23,10 +23,10 @@ public class LibraryRepository: ILibraryRepository
     {
         var borrow = await _appDbContext.BookBorrows
             .AsNoTracking()
-            .FirstOrDefaultAsync(b => b.BookId == bookId);
+            .FirstAsync(b => b.BookId == bookId);
         return borrow.ToBookBorrow();
     }
-    public async Task<Guid> BorrowBook(Guid bookId, Guid readerId)
+    public async Task<Borrow> BorrowBook(Guid bookId, Guid readerId)
     {
         var book = await _appDbContext.Books.FirstOrDefaultAsync(b => b.Id == bookId);
         
@@ -48,7 +48,7 @@ public class LibraryRepository: ILibraryRepository
         
         await _appDbContext.SaveChangesAsync();
 
-        return borrow.Id;
+        return borrow.ToBookBorrow();
     }
 
     public async Task<Guid> ReturnBook(Guid bookId)

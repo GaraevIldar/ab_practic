@@ -123,4 +123,10 @@ public class ReaderRepository: IReaderRepository
 
             return books;
     }
+
+    public async Task<string> GetReaderFullNameById(Guid id)
+    {
+        var reader  = await _dbContext.Readers.FirstAsync(r => r.Id == id);
+        return reader.FullName;
+    }
 }

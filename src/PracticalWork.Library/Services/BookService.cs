@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Contracts.v1.Pagination;
 using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Contracts.v1.Enums;
+using PracticalWork.Library.Events;
 using PracticalWork.Library.Exceptions.Book;
 using PracticalWork.Library.Models;
 
@@ -20,12 +22,16 @@ public sealed class BookService : IBookService
     private readonly string _cacheVersion;
     private readonly string _booksListPrefix;
     private readonly double _cacheTtlInMinutes;
+    private readonly IRabbitPublisher _publisher;
+    private readonly IConfigurationSection _rabbitLibrarySection;
+    private readonly string _exchangeName;
 
     public BookService(IBookRepository bookRepository,
         ICacheService cacheService,
         IMinioService minioService,
         IBookPaginationService paginationService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IRabbitPublisher rabbitPublisher)
     {
         _bookRepository = bookRepository;
         _cacheService = cacheService;
@@ -35,6 +41,9 @@ public sealed class BookService : IBookService
         _cacheVersion = section["VersionKey"];
         _booksListPrefix = section["BooksList:Prefix"];
         _cacheTtlInMinutes = section.GetValue<double>("BooksList:TtlInMinutes");
+        _rabbitLibrarySection = configuration.GetSection("App:RabbitMQ:Library");
+        _exchangeName = _rabbitLibrarySection["ExchangeName"];
+        _publisher = rabbitPublisher;
     }
 
     public async Task<Guid> CreateBook(Book book)
@@ -42,7 +51,15 @@ public sealed class BookService : IBookService
         book.Status = Enums.BookStatus.Available;
         
         var id = await _bookRepository.CreateBook(book);
+        var message = new BookCreatedEvent(
+            book.Id,
+            book.Title,
+            book.Category.ToString(),
+            book.Authors.ToArray(),
+            book.Year
+            );
 
+        await _publisher.PublishAsync(_exchangeName,_rabbitLibrarySection["BookCreate:RoutingKey"],message);
         await _cacheService.InvalidateCache(_cacheVersion);
 
         return id;
@@ -76,6 +93,12 @@ public sealed class BookService : IBookService
             throw new BookBorrowedException();
             
         await _bookRepository.MoveToArchive(id);
+        var message = new BookArchivedEvent(id, book.Title, 
+            "Вызван метод архивации книги", DateTime.UtcNow);
+        await _publisher.PublishAsync(
+            _exchangeName, 
+            _rabbitLibrarySection["BookArchive:RoutingKey"], 
+            message);
         await _cacheService.InvalidateCache(_cacheVersion);
     }
     

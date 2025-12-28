@@ -13,4 +13,5 @@ public interface IReaderRepository
     Task<bool> IsBookBorrowsExist(Guid id);
     Task<string> GetBookNonReturners(Guid id);
     Task<IList<Book>> GetReaderBooks(Guid readerId);
+    Task<string> GetReaderFullNameById(Guid id);
 }

@@ -8,17 +8,12 @@ namespace PracticalWork.Library.Events;
 /// <param name="Category">Категория книги</param>
 /// <param name="Authors">Массив авторов книги</param>
 /// <param name="Year">Год издания</param>
-/// <param name="CreatedAt">Дата и время создания книги</param>
-/// <param name="OccurredOn">Дата и время возникновения события</param>
 public sealed record BookCreatedEvent(
     Guid BookId,
     string Title,
     string Category,
     string[] Authors,
-    int Year,
-    DateTime CreatedAt,
-#pragma warning disable CS8907 // Parameter is unread. Did you forget to use it to initialize the property with that name?
-    DateTime OccurredOn
+    int Year
 ) : BaseLibraryEvent("book.created")
 {
     public BookCreatedEvent(Guid bookId, string title, string category, string[] authors,
@@ -28,9 +23,7 @@ public sealed record BookCreatedEvent(
             title,
             category,
             authors ?? Array.Empty<string>(),
-            year,
-            createdAt,
-            DateTime.UtcNow
+            year
         )
     {
     }
