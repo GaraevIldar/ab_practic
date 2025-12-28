@@ -7,6 +7,7 @@ using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Data.PostgreSql;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Web.Configuration;
+using PracticalWork.Library.MessageBroker.Rabbit;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -61,7 +62,6 @@ public class Startup
         services.AddDomain();
         services.AddCache(Configuration); 
         services.AddMinioFileStorage(Configuration);
-        
     }
 
     [UsedImplicitly]

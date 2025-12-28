@@ -9,8 +9,8 @@ public class ConsumersBackgroundService: BackgroundService
 {
     private readonly RabbitSetupService _setupService;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly List<IRabbitMQConsumer?> _consumers;
-    private readonly IInitializable? _initializable;
+    private readonly List<IRabbitMQConsumer> _consumers;
+    private readonly IInitializable _initializable;
     
     public ConsumersBackgroundService(
         RabbitSetupService setupService,
@@ -18,7 +18,7 @@ public class ConsumersBackgroundService: BackgroundService
         IInitializable init)
     {
         _setupService = setupService;
-        _consumers = new List<IRabbitMQConsumer?>();
+        _consumers = new List<IRabbitMQConsumer>();
         _scopeFactory = factory;
         _initializable = init;
     }

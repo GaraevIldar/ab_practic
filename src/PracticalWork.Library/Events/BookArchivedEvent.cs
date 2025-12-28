@@ -13,6 +13,7 @@ public sealed record BookArchivedEvent(
     string Title,
     string Reason,
     DateTime ArchivedAt,
+#pragma warning disable CS8907 // Parameter is unread. Did you forget to use it to initialize the property with that name?
     DateTime OccurredOn = default
 ) : BaseLibraryEvent("book.archived")
 {

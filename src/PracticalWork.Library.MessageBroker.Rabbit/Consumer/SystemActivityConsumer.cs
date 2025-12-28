@@ -21,7 +21,7 @@ public class SystemActivityConsumer<TEvent> : BaseRabbitConsumer<TEvent>
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    protected override async Task HandleMessageAsync(TEvent? message)
+    protected override async Task HandleMessageAsync(TEvent message)
     {
         if (message == null)
         {

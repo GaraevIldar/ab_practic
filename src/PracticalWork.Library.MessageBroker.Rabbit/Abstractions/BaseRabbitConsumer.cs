@@ -14,8 +14,8 @@ namespace PracticalWork.Library.MessageBroker.Rabbit.Abstractions;
 /// <typeparam name="TMessage">Тип события для обработки</typeparam>
 public abstract class BaseRabbitConsumer<TMessage> : IRabbitMQConsumer where TMessage : BaseEvent
 {
-    private IChannel? _channel;
-    private string? _consumerTag;
+    private IChannel _channel;
+    private string _consumerTag;
     private readonly IRabbitChannelManager _channelManager;
     protected readonly ILogger<BaseRabbitConsumer<TMessage>> Logger;
 
@@ -78,5 +78,5 @@ public abstract class BaseRabbitConsumer<TMessage> : IRabbitMQConsumer where TMe
     /// <summary>
     /// Метод для обработки конкретного события
     /// </summary>
-    protected abstract Task HandleMessageAsync(TMessage? message);
+    protected abstract Task HandleMessageAsync(TMessage message);
 }

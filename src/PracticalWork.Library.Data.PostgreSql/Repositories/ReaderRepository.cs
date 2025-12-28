@@ -42,7 +42,7 @@ public class ReaderRepository: IReaderRepository
     public async Task<Guid> UpdateReaderExpiryDateAsync(Guid id, ExtendReaderRequest request)
     {
         var reader = await _dbContext.Readers
-            .FirstOrDefaultAsync(r => r.Id == id);
+            .FirstAsync(r => r.Id == id);
 
         reader.ExpiryDate = request.NewExpiryDate;
         

@@ -7,7 +7,7 @@ namespace PracticalWork.Library.Models;
 /// <summary>
 /// Запись активности системы
 /// </summary>
-public class ActivityLog: ICursor
+public class ActivityLog
 {
     /// <summary>
     /// Тип события системы
@@ -51,9 +51,4 @@ public class ActivityLog: ICursor
             _ => throw new JsonException("Unknown event")
         };
     }
-    
-    /// <summary>
-    /// Объект курсорной пагинации
-    /// </summary>
-    public Cursor Cursor { get; set; }
 }

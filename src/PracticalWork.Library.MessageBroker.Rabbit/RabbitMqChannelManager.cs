@@ -15,7 +15,7 @@ public sealed class RabbitMqChannelManager : IRabbitChannelManager, IInitializab
     private readonly SemaphoreSlim _semaphore;
     private readonly ConnectionFactory _connectionFactory;
 
-    private IConnection? _connection;
+    private IConnection _connection;
     private readonly int _poolLimit;
     private readonly string _connectionName;
 

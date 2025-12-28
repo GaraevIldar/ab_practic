@@ -1,4 +1,6 @@
 #nullable enable
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using PracticalWork.Library.Abstractions.Services;
@@ -37,10 +39,27 @@ public class RedisCacheService : ICacheService
         await _cache.RemoveAsync(key);
         return true;
     }
-
-    public async Task<bool> ExistsAsync(string key)
+    public string GenerateCacheKey(
+        string prefix,
+        long cacheVersion,
+        object parameters)
     {
-        var value = await _cache.GetStringAsync(key);
-        return value != null;
+        var json = JsonSerializer.Serialize(parameters);
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(json));
+        var data = Convert.ToHexString(hash).Substring(0,20);
+        return $"{prefix}:v{cacheVersion}:{data}";
+    }
+    
+    public async Task InvalidateCache(string cacheVersionKey)
+    {
+        var currentVersion = await GetCurrentCacheVersion(cacheVersionKey);
+        var newVersion = currentVersion + 1;
+        await SetAsync(cacheVersionKey, newVersion);
+    }
+    
+    public async Task<long> GetCurrentCacheVersion(string cacheVersionKey)
+    {
+        var version = await GetAsync<long>(cacheVersionKey);
+        return version == 0 ? 1 : version;
     }
 }

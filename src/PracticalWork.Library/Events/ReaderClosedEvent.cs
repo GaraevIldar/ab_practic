@@ -13,6 +13,7 @@ public sealed record ReaderClosedEvent(
     string FullName,
     DateTime ClosedAt,
     string Reason,
+#pragma warning disable CS8907 // Parameter is unread. Did you forget to use it to initialize the property with that name?
     DateTime OccurredOn = default
 ) : BaseLibraryEvent("reader.closed")
 {

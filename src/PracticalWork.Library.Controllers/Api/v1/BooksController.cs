@@ -1,16 +1,16 @@
 ﻿using Asp.Versioning;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PracticalWork.Library.Abstractions.Services;
-using PracticalWork.Library.Contracts.v1.Abstracts;
 using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
+using PracticalWork.Library.Contracts.v1.Pagination;
 using PracticalWork.Library.Controllers.Filters;
 using PracticalWork.Library.Controllers.Mappers.v1;
-using PracticalWork.Library.Controllers.Validations.v1;
 
 namespace PracticalWork.Library.Controllers.Api.v1;
-
+/// <summary>
+/// Контроллер для управления книгами в библиотечной системе
+/// </summary>
 [ApiController]
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/books")]
@@ -18,12 +18,17 @@ public class BooksController : Controller
 {
     private readonly IBookService _bookService;
 
-    public BooksController(IBookService bookService)
+    public BooksController(
+        IBookService bookService)
     {
         _bookService = bookService;
     }
 
-    /// <summary> Создание новой книги</summary>
+    /// <summary>
+    /// Создание новой книги
+    /// </summary>
+    /// <param name="request">Данные для создания книги</param>
+    /// <returns>Идентификатор созданной книги</returns>
     [HttpPost]
     [Produces("application/json")]
     [ProducesResponseType(typeof(CreateBookResponse), 200)]
@@ -36,7 +41,12 @@ public class BooksController : Controller
 
         return Content(result.ToString());
     }
-    /// <summary> Обновление книги</summary>
+    /// <summary>
+    /// Обновление существующей книги
+    /// </summary>
+    /// <param name="id">Идентификатор книги для обновления</param>
+    /// <param name="request">Обновленные данные книги</param>
+    /// <returns>Статус выполнения операции</returns>
     [HttpPut("{id}")]
     [Produces("application/json")]
     [ProducesResponseType(400)]
@@ -48,7 +58,11 @@ public class BooksController : Controller
 
         return Ok();
     }
-    /// <summary> Перемешение книги в архив</summary>
+    /// <summary>
+    /// Перемещение книги в архив
+    /// </summary>
+    /// <param name="id">Идентификатор книги для архивации</param>
+    /// <returns>Статус выполнения операции</returns>
     [HttpPost("{id}/archive")]
     [Produces("application/json")]
     [ProducesResponseType(400)]
@@ -59,18 +73,34 @@ public class BooksController : Controller
 
         return Ok();
     }
-    /// <summary>Получение всех книг</summary>
+    /// <summary>
+    /// Получение списка всех книг
+    /// </summary>
+    /// <returns>Список всех книг в системе</returns>
+    /// <remarks>
+    /// Возвращает как активные, так и архивные книги.
+    /// Для фильтрации результатов используйте параметры запроса.
+    /// </remarks>
     [HttpGet]
     [Produces("application/json")]
     [ProducesResponseType(typeof(BookListResponse), 200)]
-    public async Task<IActionResult> GetBooks()
+    [ProducesResponseType(400)]
+    [ProducesResponseType(500)]
+    public async Task<IActionResult> GetBooks([FromQuery] PaginationBookRequest request)
     {
-        var result = await _bookService.GetBooks();
+        var result = await _bookService.GetBooks(request.PageNumber, request.PageSize, request.Status, request.Category, request.Author );
         
         return Ok(result);
     }
 
-    /// <summary>Добавление деталей книги</summary>
+    /// <summary>
+    /// Добавление деталей к существующей книге
+    /// </summary>
+    /// <param name="request">Данные с деталями книги</param>
+    /// <returns>Статус выполнения операции</returns>
+    /// <remarks>
+    /// Позволяет добавить описание и обложку к книге.
+    /// </remarks>
     [HttpPost("{id}/details")]
     [Produces("application/json")]
     [ServiceFilter(typeof(GenericValidationFilter<AddBookDetailsRequest>))]

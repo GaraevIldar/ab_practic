@@ -17,6 +17,7 @@ public sealed record BookBorrowedEvent(
     string ReaderName,
     DateTime BorrowDate,
     DateTime DueDate,
+#pragma warning disable CS8907 // Parameter is unread. Did you forget to use it to initialize the property with that name?
     DateTime OccurredOn = default
 ) : BaseLibraryEvent("book.borrowed")
 {

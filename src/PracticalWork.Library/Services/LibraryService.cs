@@ -1,12 +1,13 @@
+using Microsoft.Extensions.Configuration;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.Minio;
-using PracticalWork.Library.Enums;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Exceptions.Book;
 using PracticalWork.Library.Exceptions.Library;
 using PracticalWork.Library.Exceptions.Reader;
+using BookCategory = PracticalWork.Library.Contracts.v1.Enums.BookCategory;
 using BookStatus = PracticalWork.Library.Contracts.v1.Enums.BookStatus;
 
 namespace PracticalWork.Library.Services;
@@ -18,22 +19,34 @@ public sealed class LibraryService : ILibraryService
     private readonly IReaderRepository _readerRepository;
     private readonly IMinioService _minioService;
     private readonly ICacheService _cacheService;
-
-    private const string BooksCacheKey = "books:no-archive";
-    private static readonly TimeSpan CacheExpiry = TimeSpan.FromMinutes(5);
+    private readonly IBookPaginationService _paginationService;
+    private readonly string _libraryCacheVersion;
+    private readonly string _libraryBooksListPrefix;
+    private readonly double _libraryBooksTtlInMinutes;
+    private readonly string _booksDetailsPrefix;
+    private readonly double _booksDetailsTtlInMinutes;
 
     public LibraryService(
         ILibraryRepository libraryRepository,
         IBookRepository bookRepository,
         IReaderRepository readerRepository,
         IMinioService minioService,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        IBookPaginationService paginationService,
+        IConfiguration configuration)
     {
         _libraryRepository = libraryRepository;
         _bookRepository = bookRepository;
         _readerRepository = readerRepository;
         _minioService = minioService;
         _cacheService = cacheService;
+        _paginationService = paginationService;
+        var section = configuration.GetSection("App:Redis:Books");
+        _libraryCacheVersion = section["VersionKey"];
+        _libraryBooksListPrefix = section["LibraryBooks:Prefix"];
+        _libraryBooksTtlInMinutes = section.GetValue<double>("LibraryBooks:TtlInMinutes");
+        _booksDetailsPrefix = section["BookDetails:Prefix"];
+        _booksDetailsTtlInMinutes = section.GetValue<double>("BookDetails:TtlInMinutes");
     }
 
     public async Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId)
@@ -59,20 +72,28 @@ public sealed class LibraryService : ILibraryService
             throw new LibraryServiceException("Ошибка при выдаче книги", ex);
         }
     }
-
-    public async Task<BookListResponse> GetBooksNoArchive()
+    
+    public async Task<BookListResponse> GetBooksNoArchive(int pageNumber, int pageSize, BookStatus? status, BookCategory? category, string author)
     {
         try
         {
-            var cached = await _cacheService.GetAsync<BookListResponse>(BooksCacheKey);
+            var cacheVersion = await _cacheService.GetCurrentCacheVersion(_libraryCacheVersion);
+            var prms = new
+            {
+                category, 
+                author, 
+                status
+            };
+            var cacheKey = _cacheService.GenerateCacheKey(_libraryBooksListPrefix, cacheVersion, prms);
+            var cached = await _cacheService.GetAsync<BookListResponse>(cacheKey);
             if (cached != null)
                 return cached;
 
-            var books = await _bookRepository.GetBooksNoArchive();
+            var books = await _bookRepository.GetBooksNoArchive(status, author);
 
-            await _cacheService.SetAsync(BooksCacheKey, books, CacheExpiry);
+            await _cacheService.SetAsync(cacheKey, books, TimeSpan.FromMinutes(_libraryBooksTtlInMinutes));
 
-            return books;
+            return _paginationService.PaginationBooks(books, pageNumber, pageSize);
         }
         catch (Exception ex)
         {

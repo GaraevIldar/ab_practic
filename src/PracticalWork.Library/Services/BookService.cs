@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Response;
+using PracticalWork.Library.Contracts.v1.Pagination;
 using PracticalWork.Library.Data.Minio;
-using PracticalWork.Library.Enums;
-using PracticalWork.Library.Exceptions;
+using PracticalWork.Library.Contracts.v1.Enums;
 using PracticalWork.Library.Exceptions.Book;
 using PracticalWork.Library.Models;
 
@@ -15,25 +16,34 @@ public sealed class BookService : IBookService
     private readonly IBookRepository _bookRepository;
     private readonly ICacheService _cacheService;
     private readonly IMinioService _minioService;
-    private const string BooksCacheVersionKey = "books:cache:version";
-    private const int PageCacheDurationMinutes = 10;
+    private readonly IBookPaginationService _paginationService;
+    private readonly string _cacheVersion;
+    private readonly string _booksListPrefix;
+    private readonly double _cacheTtlInMinutes;
 
     public BookService(IBookRepository bookRepository,
         ICacheService cacheService,
-        IMinioService minioService)
+        IMinioService minioService,
+        IBookPaginationService paginationService,
+        IConfiguration configuration)
     {
         _bookRepository = bookRepository;
         _cacheService = cacheService;
         _minioService = minioService;
+        _paginationService = paginationService;
+        var section = configuration.GetSection("App:Redis:Books");
+        _cacheVersion = section["VersionKey"];
+        _booksListPrefix = section["BooksList:Prefix"];
+        _cacheTtlInMinutes = section.GetValue<double>("BooksList:TtlInMinutes");
     }
 
     public async Task<Guid> CreateBook(Book book)
     {
-        book.Status = BookStatus.Available;
+        book.Status = Enums.BookStatus.Available;
         
         var id = await _bookRepository.CreateBook(book);
-            
-        await IncreaseCacheVersion();
+
+        await _cacheService.InvalidateCache(_cacheVersion);
 
         return id;
     }
@@ -45,11 +55,11 @@ public sealed class BookService : IBookService
         if (existingEntity == null)
             throw new BookNotFoundException(id);
 
-        if (existingEntity.Status == BookStatus.Archived)
+        if (existingEntity.Status == Enums.BookStatus.Archived)
             throw new BookArchivedException(id);
         
         await _bookRepository.UpdateBook(id, book);
-        await IncreaseCacheVersion();
+        await _cacheService.InvalidateCache(_cacheVersion);
     }
     
     public async Task MoveToArchive(Guid id)
@@ -59,32 +69,40 @@ public sealed class BookService : IBookService
         if (book == null)
             throw new BookNotFoundException(id);
 
-        if (book.Status == BookStatus.Archived)
+        if (book.Status == Enums.BookStatus.Archived)
             throw new BookAlreadyArchivedException();
         
-        if (book.Status == BookStatus.Borrow)
+        if (book.Status == Enums.BookStatus.Borrow)
             throw new BookBorrowedException();
             
         await _bookRepository.MoveToArchive(id);
-        await IncreaseCacheVersion();
+        await _cacheService.InvalidateCache(_cacheVersion);
     }
     
-    public async Task<BookListResponse> GetBooks()
+    public async Task<BookListResponse> GetBooks(int pageNumber, int pageSize, BookStatus? status, BookCategory? category, string author)
     {
-        var cacheKey = await BuildBooksCacheKey();
-
+        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_cacheVersion);
+        var prms = new
+        {
+            category, 
+            author, 
+            status
+        };
+        var cacheKey = _cacheService.GenerateCacheKey(_booksListPrefix, cacheVersion, prms);
         var cached = await _cacheService.GetAsync<BookListResponse>(cacheKey);
         if (cached != null)
             return cached;
 
-        var books = await _bookRepository.GetBooks();
+        var books = await _bookRepository.GetFilterBooks(status, author);
 
+        var paginationBooks = _paginationService.PaginationBooks(books, pageNumber, pageSize);
+    
         await _cacheService.SetAsync(
             cacheKey,
-            books,
-            TimeSpan.FromMinutes(PageCacheDurationMinutes));
+            paginationBooks,
+            TimeSpan.FromMinutes(_cacheTtlInMinutes));
 
-        return books;
+        return paginationBooks;
     }
     public async Task AddBookDetails(Guid bookId, string description, IFormFile coverFile)
     {
@@ -108,24 +126,6 @@ public sealed class BookService : IBookService
         book.CoverImagePath = path;
 
         await _bookRepository.UpdateBook(bookId, book);
-        await IncreaseCacheVersion();
-    }
-
-    private async Task<int> GetCacheVersion()
-    {
-        var version = await _cacheService.GetAsync<int?>(BooksCacheVersionKey);
-        return version ?? 1;
-    }
-
-    private async Task IncreaseCacheVersion()
-    {
-        var version = await GetCacheVersion();
-        await _cacheService.SetAsync(BooksCacheVersionKey, version + 1);
-    }
-
-    private async Task<string> BuildBooksCacheKey()
-    {
-        var version = await GetCacheVersion();
-        return $"books:list:v{version}";
+        await _cacheService.InvalidateCache(_cacheVersion);
     }
 }

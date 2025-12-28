@@ -14,16 +14,9 @@ public interface IReportService
     /// <returns>Асинхронная операция сохранения</returns>
     Task SaveActivityLogs(ActivityLog log);
     
-    /// <summary>
-    /// Получить страницу записей из журнала системных событий с применением фильтров
-    /// </summary>
-    /// <param name="request">Параметры постраничного запроса</param>
-    /// <param name="eventTypes">Типы событий для фильтрации</param>
-    /// <param name="eventDateFrom">Начальная дата периода для выборки событий</param>
-    /// <param name="eventDateTo">Конечная дата периода для выборки событий</param>
-    /// <returns>объект пагинации с записями</returns>
-    Task<CursorPaginationResponse<ActivityLog>> GetActivityLogs(CursorPaginationRequest request, 
-        string[] eventTypes, DateOnly? eventDateFrom, DateOnly? eventDateTo);
+
+    // Task<CursorPaginationResponse<ActivityLog>> GetActivityLogs(CursorPaginationRequest request, 
+    //     string[] eventTypes, DateOnly? eventDateFrom, DateOnly? eventDateTo);
     
     /// <summary>
     /// Создание отчета по событиям системы

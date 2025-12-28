@@ -15,6 +15,7 @@ public sealed record ReaderCreatedEvent(
     string PhoneNumber,
     DateTime ExpiryDate,
     DateTime CreatedAt,
+#pragma warning disable CS8907 // Parameter is unread. Did you forget to use it to initialize the property with that name?
     DateTime OccurredOn = default
 ) : BaseLibraryEvent("reader.created")
 {

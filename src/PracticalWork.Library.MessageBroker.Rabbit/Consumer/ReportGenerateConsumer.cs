@@ -22,7 +22,7 @@ public class ReportGenerateConsumer : BaseRabbitConsumer<ReportCreateEvent>
     /// <summary>
     /// Обработка события создания отчета
     /// </summary>
-    protected override async Task HandleMessageAsync(ReportCreateEvent? message)
+    protected override async Task HandleMessageAsync(ReportCreateEvent message)
     {
         if (message == null)
         {

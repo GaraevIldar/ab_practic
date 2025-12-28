@@ -79,11 +79,12 @@ public sealed class BookRepository : IBookRepository
         await _appDbContext.SaveChangesAsync();
     }
 
-    public async Task<BookListResponse> GetBooks()
+    public async Task<BookListResponse> GetFilterBooks(BookStatus? status, string author)
     {
         var books = await _appDbContext.Books
             .AsNoTracking()   
-            .OrderBy(b => b.Status)
+            .Where(b => !status.HasValue || b.Status == (Enums.BookStatus)status)
+            .Where(b => string.IsNullOrWhiteSpace(author) || b.Authors.Contains(author))
             .ToListAsync();
 
         return new BookListResponse()
@@ -108,12 +109,12 @@ public sealed class BookRepository : IBookRepository
             }).ToList()
         };
     }
-    public async Task<BookListResponse> GetBooksNoArchive()
+    public async Task<BookListResponse> GetBooksNoArchive(BookStatus? status, string author)
     {
         var books = await _appDbContext.Books
             .AsNoTracking()
-            .Where(b=> b.Status != Enums.BookStatus.Archived)
-            .OrderBy(b => b.Status)
+            .Where(b => !status.HasValue || b.Status == (Enums.BookStatus)status)
+            .Where(b => string.IsNullOrWhiteSpace(author) || b.Authors.Contains(author))
             .ToListAsync();
 
         var response = new BookListResponse()

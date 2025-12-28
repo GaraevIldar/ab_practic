@@ -11,6 +11,9 @@ using PracticalWork.Library.Controllers.Validations.v1;
 
 namespace PracticalWork.Library.Controllers.Api.v1;
 
+/// <summary>
+/// Контроллер для управления читателями библиотеки
+/// </summary>
 [ApiController]
 [ApiVersion("1")]
 [Route("api/v{version:apiVersion}/readers")]
@@ -23,7 +26,11 @@ public class ReaderController : Controller
         _readerService = readerService;
     }
 
-    /// <summary> Создание читателя</summary>
+    /// <summary>
+    /// Создание нового читателя
+    /// </summary>
+    /// <param name="request">Данные для создания читателя</param>
+    /// <returns>Идентификатор созданного читателя</returns>
     [HttpPost]
     [Produces("application/json")]
     [ProducesResponseType(typeof(CreateReaderResponse), 200)]
@@ -37,7 +44,12 @@ public class ReaderController : Controller
         return Content(result.ToString());
     }
 
-    /// <summary> Обновление времени карточки читателя</summary>
+    /// <summary>
+    /// Продление срока действия библиотечной карточки читателя
+    /// </summary>
+    /// <param name="id">Идентификатор читателя</param>
+    /// <param name="request">Данные для продления карточки</param>
+    /// <returns>Идентификатор карточки читателя</returns>
     [HttpPost("{id}/extend")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(ExtendReaderResponse), 200)]
@@ -51,7 +63,11 @@ public class ReaderController : Controller
         return Content(result.ToString());
     }
     
-    /// <summary> Закрытие карточки читателя</summary>
+    /// <summary>
+    /// Закрытие библиотечной карточки читателя
+    /// </summary>
+    /// <param name="id">Идентификатор читателя</param>
+    /// <returns>Результат операции закрытия карточки</returns>
     [HttpPost("{id}/close")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(CloseReaderCardResponse), 200)]
@@ -64,7 +80,11 @@ public class ReaderController : Controller
         return Content(result);
     }
     
-    /// <summary> Получение всех книг читателя</summary>
+    /// <summary>
+    /// Получение списка книг, взятых читателем
+    /// </summary>
+    /// <param name="id">Идентификатор читателя</param>
+    /// <returns>Список книг, находящихся у читателя</returns>
     [HttpGet("{id}/books")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(CloseReaderCardResponse), 200)]

@@ -25,7 +25,7 @@ public class RabbitPublisher: IRabbitPublisher
         string key,
         T payload)
     {
-        IChannel? channel = null;
+        IChannel channel = null;
 
         try
         {

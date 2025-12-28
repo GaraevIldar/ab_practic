@@ -17,10 +17,11 @@ public sealed record BookCreatedEvent(
     string[] Authors,
     int Year,
     DateTime CreatedAt,
+#pragma warning disable CS8907 // Parameter is unread. Did you forget to use it to initialize the property with that name?
     DateTime OccurredOn
 ) : BaseLibraryEvent("book.created")
 {
-    public BookCreatedEvent(Guid bookId, string title, string category, string[]? authors,
+    public BookCreatedEvent(Guid bookId, string title, string category, string[] authors,
         int year, DateTime createdAt)
         : this(
             bookId,

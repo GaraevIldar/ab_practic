@@ -19,24 +19,24 @@ public static class Entry
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var librarySection = configuration.GetSection("App:RabbitMQ:Library");
-        var reportsSection = configuration.GetSection("App:RabbitMQ:Reports");
-
-        services
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookCreatedEvent>>(
-                librarySection["BookCreate:QueueName"])
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookArchivedEvent>>(
-                librarySection["BookArchive:QueueName"])
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookReturnedEvent>>(
-                librarySection["BookReturn:QueueName"])
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookBorrowedEvent>>(
-                librarySection["BookBorrow:QueueName"])
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderCreatedEvent>>(
-                librarySection["ReaderCreate:QueueName"])
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderClosedEvent>>(
-                librarySection["ReaderClose:QueueName"])
-            .AddKeyedSingleton<IRabbitMQConsumer, ReportGenerateConsumer>(
-                reportsSection["QueueName"]);
+        // var librarySection = configuration.GetSection("App:RabbitMQ:Library");
+        // var reportsSection = configuration.GetSection("App:RabbitMQ:Reports");
+        //
+        // services
+        //     .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookCreatedEvent>>(
+        //         librarySection["BookCreate:QueueName"])
+        //     .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookArchivedEvent>>(
+        //         librarySection["BookArchive:QueueName"])
+        //     .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookReturnedEvent>>(
+        //         librarySection["BookReturn:QueueName"])
+        //     .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookBorrowedEvent>>(
+        //         librarySection["BookBorrow:QueueName"])
+        //     .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderCreatedEvent>>(
+        //         librarySection["ReaderCreate:QueueName"])
+        //     .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderClosedEvent>>(
+        //         librarySection["ReaderClose:QueueName"])
+        //     .AddKeyedSingleton<IRabbitMQConsumer, ReportGenerateConsumer>(
+        //         reportsSection["QueueName"]);
         
         services.AddSingleton<RabbitConsumerService>();
 
