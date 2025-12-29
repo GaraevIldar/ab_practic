@@ -105,18 +105,18 @@ public sealed class BookService : IBookService
     public async Task<BookListResponse> GetBooks(int pageNumber, int pageSize, BookStatus? status, BookCategory? category, string author)
     {
         var cacheVersion = await _cacheService.GetCurrentCacheVersion(_cacheVersion);
-        var prms = new
+        var param = new
         {
             category, 
             author, 
             status
         };
-        var cacheKey = _cacheService.GenerateCacheKey(_booksListPrefix, cacheVersion, prms);
+        var cacheKey = _cacheService.GenerateCacheKey(_booksListPrefix, cacheVersion, param);
         var cached = await _cacheService.GetAsync<BookListResponse>(cacheKey);
         if (cached != null)
             return cached;
 
-        var books = await _bookRepository.GetFilterBooks(status, author);
+        var books = await _bookRepository.GetFilterBooks(status, category, author);
 
         var paginationBooks = _paginationService.PaginationBooks(books, pageNumber, pageSize);
     

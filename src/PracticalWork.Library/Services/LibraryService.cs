@@ -85,23 +85,22 @@ public sealed class LibraryService : ILibraryService
         }
     }
     
-    public async Task<BookListResponse> GetBooksNoArchive(int pageNumber, int pageSize, BookStatus? status, BookCategory? category, string author)
+    public async Task<BookListResponse> GetBooksNoArchive(int pageNumber, int pageSize, BookCategory? category, string author)
     {
         try
         {
             var cacheVersion = await _cacheService.GetCurrentCacheVersion(_libraryCacheVersion);
-            var prms = new
+            var param = new
             {
                 category, 
-                author, 
-                status
+                author
             };
-            var cacheKey = _cacheService.GenerateCacheKey(_libraryBooksListPrefix, cacheVersion, prms);
+            var cacheKey = _cacheService.GenerateCacheKey(_libraryBooksListPrefix, cacheVersion, param);
             var cached = await _cacheService.GetAsync<BookListResponse>(cacheKey);
             if (cached != null)
                 return cached;
 
-            var books = await _bookRepository.GetBooksNoArchive(status, author);
+            var books = await _bookRepository.GetBooksNoArchive(category, author);
 
             await _cacheService.SetAsync(cacheKey, books, TimeSpan.FromMinutes(_libraryBooksTtlInMinutes));
 

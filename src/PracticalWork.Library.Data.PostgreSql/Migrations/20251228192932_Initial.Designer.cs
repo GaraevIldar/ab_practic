@@ -12,8 +12,8 @@ using PracticalWork.Library.Data.PostgreSql;
 namespace PracticalWork.Library.Data.PostgreSql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251012122504_Init")]
-    partial class Init
+    [Migration("20251228192932_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,9 @@ namespace PracticalWork.Library.Data.PostgreSql.Migrations
                     b.PrimitiveCollection<string[]>("Authors")
                         .IsRequired()
                         .HasColumnType("text[]");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CoverImagePath")
                         .HasMaxLength(500)

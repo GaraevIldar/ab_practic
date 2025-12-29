@@ -7,6 +7,7 @@ using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Exceptions.Book;
 using PracticalWork.Library.Exceptions.Library;
 using PracticalWork.Library.Exceptions.Reader;
+using PracticalWork.Library.Exceptions.Report;
 
 namespace PracticalWork.Library.Web.Configuration;
 
@@ -48,6 +49,7 @@ public class DomainExceptionFilter<TAppException> : IAsyncActionFilter where TAp
             case BookNotFoundException:
             case ReaderNotFoundException:
             case BookBorrowNotFoundException:
+            case ReportNotFoundException:
                 result = new NotFoundObjectResult(BuildProblemDetails(exception));
                 break;
             

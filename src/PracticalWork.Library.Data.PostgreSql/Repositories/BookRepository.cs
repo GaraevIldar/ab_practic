@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using JetBrains.Annotations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.PostgreSql.Entities;
@@ -34,6 +36,7 @@ public sealed class BookRepository : IBookRepository
         entity.Year = book.Year;
         entity.Authors = book.Authors;
         entity.Status = book.Status;
+        entity.Category = (Enums.BookCategory)book.Category;
 
         _appDbContext.Add(entity);
         await _appDbContext.SaveChangesAsync();
@@ -79,12 +82,13 @@ public sealed class BookRepository : IBookRepository
         await _appDbContext.SaveChangesAsync();
     }
 
-    public async Task<BookListResponse> GetFilterBooks(BookStatus? status, string author)
+    public async Task<BookListResponse> GetFilterBooks(BookStatus? status, BookCategory? category, string author)
     {
         var books = await _appDbContext.Books
-            .AsNoTracking()   
-            .Where(b => !status.HasValue || b.Status == (Enums.BookStatus)status)
-            .Where(b => string.IsNullOrWhiteSpace(author) || b.Authors.Contains(author))
+            .AsNoTracking()
+            .Where(b => !status.HasValue || b.Status == (Enums.BookStatus)status.Value) 
+            .Where(b => !category.HasValue || b.Category == (Enums.BookCategory)category.Value)
+            .Where(b => string.IsNullOrWhiteSpace(author) || b.Authors.Any(a => a == author))
             .ToListAsync();
 
         return new BookListResponse()
@@ -101,19 +105,20 @@ public sealed class BookRepository : IBookRepository
                 CoverImagePath = b.CoverImagePath,
                 Category = b switch
                 {
-                    FictionBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.FictionBook,
-                    EducationalBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.EducationalBook,
-                    ScientificBookEntity => (Contracts.v1.Enums.BookCategory)BookCategory.ScientificBook,
-                    _ => (Contracts.v1.Enums.BookCategory)BookCategory.Default
+                    FictionBookEntity => BookCategory.FictionBook,
+                    EducationalBookEntity => BookCategory.EducationalBook,
+                    ScientificBookEntity => BookCategory.ScientificBook,
+                    _ => BookCategory.Default
                 }
             }).ToList()
         };
     }
-    public async Task<BookListResponse> GetBooksNoArchive(BookStatus? status, string author)
+    public async Task<BookListResponse> GetBooksNoArchive(BookCategory? category, string author)
     {
         var books = await _appDbContext.Books
             .AsNoTracking()
-            .Where(b => !status.HasValue || b.Status == (Enums.BookStatus)status)
+            .Where(b =>  b.Status == (Enums.BookStatus)BookStatus.Available)
+            .Where(b => !category.HasValue || b.Category == (Enums.BookCategory)category.Value)
             .Where(b => string.IsNullOrWhiteSpace(author) || b.Authors.Contains(author))
             .ToListAsync();
 

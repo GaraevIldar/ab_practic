@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
+using PracticalWork.Library.Abstractions.Minio;
 using PracticalWork.Library.Data.Minio;
 
 public class MinioService : IMinioService
@@ -38,5 +39,19 @@ public class MinioService : IMinioService
             .WithContentType(contentType));
         
         return $"{_options.BucketName}/{objectName}";
+    }
+
+    public async Task<string> GetFileLinkAsync(string bucket, string fileName)
+    {
+        var expiryInSeconds = _options.ExpInSeconds;
+
+        var args = new PresignedGetObjectArgs()
+            .WithBucket(bucket)
+            .WithObject(fileName)
+            .WithExpiry(expiryInSeconds);
+
+        var url = await _client.PresignedGetObjectAsync(args);
+
+        return url;
     }
 }

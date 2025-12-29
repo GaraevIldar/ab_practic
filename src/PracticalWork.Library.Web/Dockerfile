@@ -13,6 +13,8 @@ COPY ["src/PracticalWork.Library.Controllers/PracticalWork.Library.Controllers.c
 COPY ["src/PracticalWork.Library.Cache.Redis/PracticalWork.Library.Cache.Redis.csproj", "PracticalWork.Library.Cache.Redis/"]
 COPY ["src/PracticalWork.Library.Data.Minio/PracticalWork.Library.Data.Minio.csproj", "PracticalWork.Library.Data.Minio/"]
 COPY ["src/PracticalWork.Library.Data.PostgreSql/PracticalWork.Library.Data.PostgreSql.csproj", "PracticalWork.Library.Data.PostgreSql/"]
+COPY ["src/PracticalWork.Library.Data.PostgreSql/PracticalWork.Library.Data.Report.csproj", "PracticalWork.Library.Report.PostgreSql/"]
+COPY ["src/PracticalWork.Library.Data.PostgreSql/PracticalWork.Library.MessageBroker.csproj", "PracticalWork.Library.MessageBroker/"]
 
 RUN dotnet restore "PracticalWork.Library.Web/PracticalWork.Library.Web.csproj"
 

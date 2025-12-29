@@ -11,9 +11,9 @@ public interface IBookRepository
     Task UpdateBook(Guid id, Book book);
     Task<Book> GetBookById(Guid id);
     Task  MoveToArchive(Guid id);
-    Task<BookListResponse> GetFilterBooks(BookStatus? status, string author);
+    Task<BookListResponse> GetFilterBooks(BookStatus? status, BookCategory? category, string author);
     Task<bool> IsBookExist(Guid id);
-    Task<BookListResponse> GetBooksNoArchive(BookStatus? status, string author);
+    Task<BookListResponse> GetBooksNoArchive(BookCategory? category, string author);
     Task<Book> GetBookByTitle(string title);
     Task UpdateBookDetailsAsync(Guid bookId, string description, string coverPath);
 }

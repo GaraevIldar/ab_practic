@@ -49,16 +49,15 @@ public class LibraryController: ControllerBase
     /// Возвращает только книги, которые:
     /// - Не находятся в архиве
     /// - В данный момент не выданы читателям
-    /// Список включает основные сведения о книгах: название, автор, год издания.
     /// </remarks>
     [HttpGet("books")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(BookListResponse), 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> GetBooks([FromQuery] PaginationBookRequest request)
+    public async Task<IActionResult> GetBooks([FromQuery] PaginationNoArchivedBookRequest request)
     {
-        var result = await _libraryService.GetBooksNoArchive(request.PageNumber, request.PageSize, request.Status, request.Category, request.Author);
+        var result = await _libraryService.GetBooksNoArchive(request.PageNumber, request.PageSize, request.Category, request.Author);
         
         return Ok(result);
     }

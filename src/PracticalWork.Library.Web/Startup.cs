@@ -11,6 +11,7 @@ using PracticalWork.Library.MessageBroker.Rabbit;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using PracticalWork.Library.Report.PostgreSql;
 
 namespace PracticalWork.Library.Web;
 
@@ -33,6 +34,14 @@ public class Startup
         services.AddPostgreSqlStorage(cfg =>
         {
             var npgsqlDataSource = new NpgsqlDataSourceBuilder(Configuration["App:DbConnectionString"])
+                .EnableDynamicJson()
+                .Build();
+
+            cfg.UseNpgsql(npgsqlDataSource);
+        });
+        services.AddPostgreSqlReport(cfg =>
+        {
+            var npgsqlDataSource = new NpgsqlDataSourceBuilder(Configuration["App:DbConnectionStringReport"])
                 .EnableDynamicJson()
                 .Build();
 

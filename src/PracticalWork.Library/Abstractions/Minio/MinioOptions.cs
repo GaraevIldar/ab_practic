@@ -1,4 +1,4 @@
-namespace PracticalWork.Library.Data.Minio;
+namespace PracticalWork.Library.Abstractions.Minio;
 
 public class MinioOptions
 {

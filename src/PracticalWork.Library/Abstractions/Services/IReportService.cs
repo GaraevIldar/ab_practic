@@ -1,3 +1,4 @@
+using PracticalWork.Library.Contracts.v1.Pagination;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Abstractions.Services;
@@ -14,9 +15,13 @@ public interface IReportService
     /// <returns>Асинхронная операция сохранения</returns>
     Task SaveActivityLogs(ActivityLog log);
     
+    /// <summary>
+    /// Создание отчета по событиям системы
+    /// </summary>
+    /// <param name="request">Запрос с данными пагинации и филтьрами</param>
+    /// <returns>Созданный отчет со статусом "в процессе"</returns>
 
-    // Task<CursorPaginationResponse<ActivityLog>> GetActivityLogs(CursorPaginationRequest request, 
-    //     string[] eventTypes, DateOnly? eventDateFrom, DateOnly? eventDateTo);
+    Task<IReadOnlyList<ActivityLog>> GetActivityLogs(ActivityLogsPaginationRequest request);
     
     /// <summary>
     /// Создание отчета по событиям системы

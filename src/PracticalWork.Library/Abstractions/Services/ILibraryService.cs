@@ -6,7 +6,7 @@ namespace PracticalWork.Library.Abstractions.Services;
 public interface ILibraryService
 {
     Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId);
-    Task<BookListResponse> GetBooksNoArchive(int pageNumber, int pageSize, BookStatus? status, BookCategory? category, string author);
+    Task<BookListResponse> GetBooksNoArchive(int pageNumber, int pageSize, BookCategory? category, string author);
     Task<ReturnBookResponse> ReturnBook(Guid bookId);
 
     Task<BookDetailsResponse> GetBookDetailsAsync(string idOrTitle);

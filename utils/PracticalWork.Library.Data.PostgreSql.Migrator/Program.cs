@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PracticalWork.Library.Report.PostgreSql;
 
 namespace PracticalWork.Library.Data.PostgreSql.Migrator;
 
@@ -50,6 +51,9 @@ public class Program
                 builder.ClearProviders();
             })
             .AddDbContext<AppDbContext>(options => options.UseNpgsql(Configuration["App:DbConnectionString"],
+                sqlServerOptions => sqlServerOptions.CommandTimeout(Configuration.GetValue<int>("App:MigrationTimeoutInSeconds"))))
+            
+            .AddDbContext<ReportDbContext>(options => options.UseNpgsql(Configuration["App:DbConnectionStringReport"],
                 sqlServerOptions => sqlServerOptions.CommandTimeout(Configuration.GetValue<int>("App:MigrationTimeoutInSeconds"))))
             .BuildServiceProvider(false);
     }
