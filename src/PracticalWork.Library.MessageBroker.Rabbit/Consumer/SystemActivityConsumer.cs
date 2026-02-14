@@ -31,7 +31,7 @@ public class SystemActivityConsumer<TEvent> : BaseRabbitConsumer<TEvent>
 
         if (message.Source != "library-service")
         {
-            Logger.LogError("Сообщение системы отклонено: некорректный источник");
+            Logger.LogWarning("Сообщение отклонено: ожидается Source=library-service, получено Source={Source}. EventType={EventType}", message.Source, message.EventType);
             return;
         }
 
@@ -45,8 +45,15 @@ public class SystemActivityConsumer<TEvent> : BaseRabbitConsumer<TEvent>
             EventType = message.EventType
         };
 
-        await reportService.SaveActivityLogs(activityLog);
-
-        Logger.LogDebug("Событие системной активности успешно записано: {EventType}", message.EventType);
+        try
+        {
+            await reportService.SaveActivityLogs(activityLog);
+            Logger.LogInformation("Лог активности записан в БД: {EventType}, EventId={EventId}", message.EventType, message.EventId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Ошибка сохранения лога активности в БД. EventType={EventType}, EventId={EventId}", message.EventType, message.EventId);
+            throw;
+        }
     }
 }

@@ -66,13 +66,32 @@ public abstract class BaseRabbitConsumer<TMessage> : IRabbitMQConsumer where TMe
             "Получено сообщение из очереди {Queue}. MessageId={Id}, DeliveryTag={Tag}",
             queueName, props.MessageId, args.DeliveryTag);
 
-        var message = JsonSerializer.Deserialize<TMessage>(json);
+        TMessage message;
+        try
+        {
+            message = JsonSerializer.Deserialize<TMessage>(json);
+        }
+        catch (JsonException ex)
+        {
+            Logger.LogError(ex, "Ошибка десериализации сообщения из очереди {Queue}. JSON: {Json}", queueName, json);
+            return;
+        }
+
         if (_channel == null)
-            throw new InvalidOperationException("RabbitMQ канал не инициализирован");
+        {
+            Logger.LogError("RabbitMQ канал не инициализирован");
+            return;
+        }
 
-        await HandleMessageAsync(message);
-
-        Logger.LogDebug("Сообщение успешно обработано: {MessageId}", props.MessageId);
+        try
+        {
+            await HandleMessageAsync(message);
+            Logger.LogDebug("Сообщение успешно обработано: {MessageId}", props.MessageId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Ошибка обработки сообщения из очереди {Queue}. MessageId={MessageId}", queueName, props.MessageId);
+        }
     }
 
     /// <summary>

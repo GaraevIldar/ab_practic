@@ -21,22 +21,26 @@ public static class Entry
     {
         var librarySection = configuration.GetSection("App:RabbitMQ:Library");
         var reportsSection = configuration.GetSection("App:RabbitMQ:Reports");
-        
+
+        static string QueueName(IConfiguration section, string subsection, string key = "QueueName")
+            => section.GetSection(subsection)[key] ?? throw new InvalidOperationException(
+                $"Конфигурация RabbitMQ: не задано {subsection}:{key} (App:RabbitMQ)");
+
         services
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookCreatedEvent>>(
-                librarySection["BookCreate:QueueName"])
+                QueueName(librarySection, "BookCreate"))
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookArchivedEvent>>(
-                librarySection["BookArchive:QueueName"])
+                QueueName(librarySection, "BookArchive"))
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookReturnedEvent>>(
-                librarySection["BookReturn:QueueName"])
+                QueueName(librarySection, "BookReturn"))
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookBorrowedEvent>>(
-                librarySection["BookBorrow:QueueName"])
+                QueueName(librarySection, "BookBorrow"))
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderCreatedEvent>>(
-                librarySection["ReaderCreate:QueueName"])
+                QueueName(librarySection, "ReaderCreate"))
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderClosedEvent>>(
-                librarySection["ReaderClose:QueueName"])
+                QueueName(librarySection, "ReaderClose"))
             .AddKeyedSingleton<IRabbitMQConsumer, ReportGenerateConsumer>(
-                reportsSection["QueueName"]);
+                reportsSection["QueueName"] ?? throw new InvalidOperationException("Конфигурация RabbitMQ: не задано Reports:QueueName"));
         
         services.AddSingleton<RabbitConsumerService>();
 

@@ -4,7 +4,7 @@ using PracticalWork.Library.MessageBroker.Rabbit.Abstractions;
 using PracticalWork.Library.MessageBroker.Rabbit.Models;
 using RabbitMQ.Client;
 
-namespace PracticalWork.Library.MessageBroker.Rabbit;
+namespace PracticalWork.Library.MessageBroker.Rabbit.Services;
 
 public class RabbitSetupService
 {

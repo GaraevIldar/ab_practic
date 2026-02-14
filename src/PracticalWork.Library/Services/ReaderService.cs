@@ -41,6 +41,7 @@ public class ReaderService : IReaderService
                 _exchangeName, 
                 _rabbitLibrarySection["ReaderCreate:RoutingKey"], 
                 message);
+            //добавить кэш
             return idReader;
         }
         catch (Exception ex)
@@ -80,7 +81,7 @@ public class ReaderService : IReaderService
                 DateTime.UtcNow, "Вызван метод закрытия карточки");
             await _publisher.PublishAsync(
                 _exchangeName, 
-                _rabbitLibrarySection["CloseReader:RoutingKey"], 
+                _rabbitLibrarySection["ReaderClose:RoutingKey"], 
                 message);
             return (await _repository.CloseReaderCard(id)).ToString();
         }
