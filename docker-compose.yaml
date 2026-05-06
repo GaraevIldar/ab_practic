@@ -9,19 +9,35 @@ services:
       - "8081:8081"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Postgres: "Host=postgres;Port=5433;Database=BookArchiveDb;Username=postgres;Password=myhome1861"
-      Redis__Configuration: "redis:6379"
-      Minio__Endpoint: "minio:9000"
-      Minio__AccessKey: "minioadmin"
-      Minio__SecretKey: "minioadmin"
-      Minio__BucketName: "bookcovers"
+      App__DbConnectionString: "Host=postgres;Port=5432;Database=BookArchiveDb;Username=postgres;Password=myhome1861"
+      App__DbConnectionStringReport: "Host=postgres-reports;Port=5432;Database=reports;Username=postgres;Password=myhome1861"
+      App__Redis__RedisCacheConnection: "redis:6379"
+      App__Minio__Endpoint: "minio:9000"
+      App__Minio__AccessKey: "minioadmin"
+      App__Minio__SecretKey: "minioadmin"
+      App__Minio__BucketName: "reports"
+      App__Minio__ReportsBucketName: "reports"
+      App__Minio__LibraryReportsBucketName: "library-reports"
+      App__RabbitMQ__Host: "rabbitmq"
+      App__RabbitMQ__User: "guest"
+      App__RabbitMQ__Password: "guest"
+      App__RabbitMQ__Port: "5672"
+      App__Email__SmtpServer: "smtp4dev"
+      App__Email__SmtpPort: "25"
+      App__Email__UseSsl: "false"
+      App__Email__SenderName: "Библиотека"
+      App__Email__SenderEmail: "noreply@library.local"
     depends_on:
       postgres:
+        condition: service_healthy
+      postgres-reports:
         condition: service_healthy
       redis:
         condition: service_started
       minio:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   postgres:
     image: postgres:15
@@ -31,16 +47,16 @@ services:
       POSTGRES_PASSWORD: myhome1861
       POSTGRES_DB: BookArchiveDb
     ports:
-      - "5433:5432" 
+      - "5433:5432"
     volumes:
       - pgdata_library:/var/lib/postgresql/data
-    healthcheck:  
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-      
+
   postgres-reports:
     image: postgres:15
     container_name: reports_postgres
@@ -52,13 +68,19 @@ services:
       - "5434:5432"
     volumes:
       - pgdata_reports:/var/lib/postgresql/data
-    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   redis:
     image: redis:7-alpine
     container_name: library_redis
     ports:
       - "6379:6379"
-    
+
   minio:
     image: minio/minio:latest
     container_name: library_minio
@@ -71,7 +93,7 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
-    
+
   rabbitmq:
     image: rabbitmq:4-management
     container_name: library-rabbitmq
@@ -84,7 +106,24 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
+  smtp4dev:
+    image: rnwood/smtp4dev:latest
+    container_name: library_smtp4dev
+    restart: unless-stopped
+    ports:
+      - "5001:80"
+      - "25:25"
+      - "143:143"
+    environment:
+      - ServerOptions__Urls=http://*:80
+      - ServerOptions__HostName=smtp4dev
 
 volumes:
   pgdata_library:

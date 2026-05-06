@@ -31,6 +31,7 @@ public class ReaderRepository: IReaderRepository
         entity.FullName = reader.FullName;
         entity.PhoneNumber = reader.PhoneNumber;
         entity.ExpiryDate = reader.ExpiryDate;
+        entity.Email = reader.Email;
         entity.IsActive = true;
         
         _dbContext.Readers.Add(entity);

@@ -19,47 +19,46 @@ public class ReportController: Controller
     {
         _reportService = reportService;
     }
-    
+
     /// <summary>
     /// Получение страницы записей о событиях системы
     /// </summary>
     /// <param name="request">объект пагинации</param>
     /// <returns>страница с записями</returns>
-    [HttpPost("/activity")]
+    [HttpGet("activity")]
     [Produces("application/json")]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> GetActivityLogs(ActivityLogsPaginationRequest request)
+    public async Task<IActionResult> GetActivityLogs([FromQuery] ActivityLogsPaginationRequest request)
     {
-        var result = await _reportService.GetActivityLogs(
-            request);
+        var result = await _reportService.GetActivityLogs(request);
         return Ok(result);
     }
-    
+
     /// <summary>
     /// Создать отчет csv
     /// </summary>
     /// <param name="request">отчет с фильтрами</param>
     /// <returns>created</returns>
-    [HttpPost("/generate")]
+    [HttpPost("generate")]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> CreateReportCsv(ReportCreateRequest request)
+    public async Task<IActionResult> CreateReportCsv([FromBody] ReportCreateRequest request)
     {
         await _reportService.CreateReport(
-            request.PeriodFrom, 
-            request.PeriodTo, 
+            request.PeriodFrom,
+            request.PeriodTo,
             request.EventTypes.ToArray());
         return Created();
     }
-    
+
     /// <summary>
     /// Получить созданные отчеты
     /// </summary>
     /// <returns>информация об отчетах</returns>
-    [HttpGet("/")]
+    [HttpGet("")]
     [Produces("application/json")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(400)]
@@ -69,13 +68,13 @@ public class ReportController: Controller
         var result = await _reportService.GetListReadyReports();
         return Ok(result);
     }
-    
+
     /// <summary>
     /// Получение ссылки на файл отчета
     /// </summary>
     /// <param name="reportName">название файла отчета</param>
     /// <returns>url отчета</returns>
-    [HttpPost("/{reportName}/download")]
+    [HttpGet("{reportName}/download")]
     [Produces("text/plain")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(400)]

@@ -176,4 +176,25 @@ public sealed class BookRepository : IBookRepository
 
         await UpdateBook(bookId, book);
     }
+
+    public async Task<IReadOnlyList<Book>> GetBooksForArchive(int yearsWithoutBorrow, int maxCount)
+    {
+        var cutoffDate = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-yearsWithoutBorrow));
+
+        var borrowedBookIds = await _appDbContext.BookBorrows
+            .AsNoTracking()
+            .Where(b => b.BorrowDate >= cutoffDate)
+            .Select(b => b.BookId)
+            .Distinct()
+            .ToListAsync();
+
+        var books = await _appDbContext.Books
+            .AsNoTracking()
+            .Where(b => b.Status == Enums.BookStatus.Available
+                        && !borrowedBookIds.Contains(b.Id))
+            .Take(maxCount)
+            .ToListAsync();
+
+        return books.Select(b => b.ToBook()).ToList();
+    }
 }

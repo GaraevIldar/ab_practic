@@ -55,4 +55,9 @@ public interface IReportService
     /// <param name="reportName">Имя файла отчета</param>
     /// <returns>url файла</returns>
     Task<string> GetReportUrl(string reportName);
+
+    /// <summary>
+    /// Генерация еженедельного отчета с сохранением в MinIO (bucket: library-reports)
+    /// </summary>
+    Task<GeneratedReport> GenerateWeeklyReport(DateTime startDate, DateTime endDate);
 }

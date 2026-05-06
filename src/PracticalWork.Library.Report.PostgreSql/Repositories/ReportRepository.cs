@@ -18,6 +18,8 @@ public class ReportRepository: IReportRepository
     {
         var entity = new ReportEntity
         {
+            Name = string.Empty,
+            FilePath = string.Empty,
             PeriodFrom = report.PeriodFrom,
             PeriodTo = report.PeriodTo,
             EventTypes = report.EventTypes,

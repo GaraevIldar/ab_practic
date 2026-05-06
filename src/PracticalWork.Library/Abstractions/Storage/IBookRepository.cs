@@ -16,4 +16,5 @@ public interface IBookRepository
     Task<BookListResponse> GetBooksNoArchive(BookCategory? category, string author);
     Task<Book> GetBookByTitle(string title);
     Task UpdateBookDetailsAsync(Guid bookId, string description, string coverPath);
+    Task<IReadOnlyList<Book>> GetBooksForArchive(int yearsWithoutBorrow, int maxCount);
 }

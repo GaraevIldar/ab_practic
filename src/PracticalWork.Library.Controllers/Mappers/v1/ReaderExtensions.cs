@@ -15,6 +15,7 @@ public static class ReaderExtensions
             FullName = request.FullName,
             PhoneNumber = request.PhoneNumber,
             ExpiryDate = request.ExpiryDate,
+            Email = request.Email,
             IsActive = true,
             CreatedAt = now,
             UpdatedAt = now

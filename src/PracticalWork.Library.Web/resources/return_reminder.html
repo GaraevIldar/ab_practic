@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Напоминание о возврате книги</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .header { background-color: #2c5f8a; color: #fff; padding: 24px 32px; }
+    .header h1 { margin: 0; font-size: 22px; }
+    .body { padding: 32px; color: #333; }
+    .body h2 { margin-top: 0; color: #2c5f8a; }
+    .book-card { background: #f0f6fb; border-left: 4px solid #2c5f8a; padding: 16px 20px; margin: 20px 0; border-radius: 4px; }
+    .book-card .title { font-size: 17px; font-weight: bold; }
+    .book-card .authors { color: #555; margin-top: 4px; }
+    .due-date { font-size: 16px; font-weight: bold; color: #d9534f; margin: 16px 0; }
+    .footer { background: #f9f9f9; padding: 20px 32px; font-size: 13px; color: #777; border-top: 1px solid #eee; }
+    .footer a { color: #2c5f8a; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>{{LibraryName}}</h1>
+  </div>
+  <div class="body">
+    <h2>Уважаемый(ая) {{ReaderName}},</h2>
+    <p>Напоминаем, что срок возврата книги истекает через <strong>{{DaysLeft}} дн.</strong></p>
+
+    <div class="book-card">
+      <div class="title">{{BookTitle}}</div>
+      <div class="authors">{{BookAuthors}}</div>
+    </div>
+
+    <p class="due-date">Дата возврата: {{DueDate}}</p>
+
+    <p>Пожалуйста, верните книгу до указанной даты, чтобы избежать штрафных санкций.</p>
+    <p>Если у вас возникли вопросы, свяжитесь с нами:</p>
+    <ul>
+      <li>Адрес: {{LibraryAddress}}</li>
+      <li>Телефон: {{LibraryPhone}}</li>
+      <li>Часы работы: {{WorkingHours}}</li>
+    </ul>
+  </div>
+  <div class="footer">
+    Это автоматическое письмо от системы <strong>{{LibraryName}}</strong>. Не отвечайте на него.
+  </div>
+</div>
+</body>
+</html>

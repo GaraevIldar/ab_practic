@@ -39,6 +39,7 @@ public class ConsumersBackgroundService: BackgroundService
         await _setupService.InitializeAsync();
 
         var queues = _setupService.DeclaredQueues!;
+        _logger.LogInformation("Запуск консьюмеров для очередей: {Queues}", string.Join(", ", queues));
 
         foreach (var queue in queues)
         {
@@ -51,6 +52,7 @@ public class ConsumersBackgroundService: BackgroundService
             await consumer.BeginListeningAsync(queue);
             _consumers.Add(consumer);
         }
+        _logger.LogInformation("Запущено консьюмеров: {Count}", _consumers.Count);
     }
     
     public override async Task StopAsync(CancellationToken cancellationToken)

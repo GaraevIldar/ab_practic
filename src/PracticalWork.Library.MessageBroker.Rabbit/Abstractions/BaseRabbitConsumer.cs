@@ -62,6 +62,7 @@ public abstract class BaseRabbitConsumer<TMessage> : IRabbitMQConsumer where TMe
         var json = Encoding.UTF8.GetString(args.Body.ToArray());
         var props = args.BasicProperties;
 
+        Logger.LogInformation("Получено сообщение из очереди {Queue}, размер={Size} байт", queueName, args.Body.Length);
         Logger.LogDebug(
             "Получено сообщение из очереди {Queue}. MessageId={Id}, DeliveryTag={Tag}",
             queueName, props.MessageId, args.DeliveryTag);

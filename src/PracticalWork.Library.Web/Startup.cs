@@ -12,6 +12,11 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using PracticalWork.Library.Report.PostgreSql;
+using PracticalWork.Library.Configuration;
+using PracticalWork.Library.Abstractions.Services;
+using PracticalWork.Library.Web.Services;
+using PracticalWork.Library.Web.Jobs;
+using Quartz;
 
 namespace PracticalWork.Library.Web;
 
@@ -69,9 +74,47 @@ public class Startup
         });
         
         services.AddDomain();
-        services.AddCache(Configuration); 
+        services.AddCache(Configuration);
         services.AddMinioFileStorage(Configuration);
         services.AddMessageBroker(Configuration);
+
+        // Configuration options
+        services.Configure<EmailSettings>(Configuration.GetSection("App:Email"));
+        services.Configure<EmailTemplateSettings>(Configuration.GetSection("App:EmailTemplates"));
+        services.Configure<ArchiveSettings>(Configuration.GetSection("App:Archive"));
+        services.Configure<JobSettings>(Configuration.GetSection("App:Jobs"));
+
+        // Email service
+        services.AddScoped<IEmailService, SmtpEmailService>();
+
+        // Quartz.NET scheduler
+        var jobSection = Configuration.GetSection("App:Jobs:Jobs");
+        services.AddQuartz(q =>
+        {
+            AddJob<ReturnRemindersJob>(q, jobSection, "ReturnReminders",
+                defaultCron: "0 0 6 * * ?");
+
+            AddJob<WeeklyReportJob>(q, jobSection, "WeeklyReport",
+                defaultCron: "0 0 5 ? * MON");
+
+            AddJob<ArchiveJob>(q, jobSection, "ArchiveBooks",
+                defaultCron: "0 0 0 1 * ?");
+        });
+
+        services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
+    }
+
+    private static void AddJob<TJob>(IServiceCollectionQuartzConfigurator q,
+        IConfigurationSection jobSection, string jobKey, string defaultCron)
+        where TJob : IJob
+    {
+        var key = new JobKey(jobKey);
+        var cron = jobSection.GetValue<string>($"{jobKey}:CronExpression") ?? defaultCron;
+        q.AddJob<TJob>(opts => opts.WithIdentity(key));
+        q.AddTrigger(opts => opts
+            .ForJob(key)
+            .WithIdentity($"{jobKey}-trigger")
+            .WithCronSchedule(cron));
     }
 
     [UsedImplicitly]
@@ -82,6 +125,7 @@ public class Startup
         {
             logger.LogInformation("Applying database migrations...");
             MigrationsRunner.ApplyMigrations(logger, serviceProvider, "Library API").GetAwaiter().GetResult();
+            ReportMigrationsRunner.ApplyMigrations(logger, serviceProvider, "Report API").GetAwaiter().GetResult();
             logger.LogInformation("Database migrations applied successfully");
         }
         catch (Exception ex)

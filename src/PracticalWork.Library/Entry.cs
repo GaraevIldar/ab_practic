@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using PracticalWork.Library.Abstractions.Services;
-using PracticalWork.Library.Abstractions.Storage;
-using PracticalWork.Library.Contracts.v1.Pagination;
 using PracticalWork.Library.Services;
 
 namespace PracticalWork.Library;
@@ -19,7 +17,8 @@ public static class Entry
         services.AddScoped<IBookPaginationService, BookPaginationService>();
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IActivityLogPaginationService, ActivityLogPaginationService>();
-        
+        services.AddScoped<IArchiveService, ArchiveService>();
+
         return services;
     }
 }

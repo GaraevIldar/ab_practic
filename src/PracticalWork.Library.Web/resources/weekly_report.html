@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Еженедельный отчет библиотеки</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; }
+    .container { max-width: 640px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .header { background-color: #1a4a1a; color: #fff; padding: 24px 32px; }
+    .header h1 { margin: 0; font-size: 22px; }
+    .header p { margin: 6px 0 0; opacity: .85; font-size: 14px; }
+    .body { padding: 32px; color: #333; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+    .stat-card { background: #f4f9f4; border: 1px solid #d0e8d0; border-radius: 6px; padding: 16px; text-align: center; }
+    .stat-card .value { font-size: 32px; font-weight: bold; color: #1a4a1a; }
+    .stat-card .label { font-size: 13px; color: #555; margin-top: 4px; }
+    .report-link { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #1a4a1a; color: #fff; text-decoration: none; border-radius: 6px; font-size: 15px; }
+    .footer { background: #f9f9f9; padding: 20px 32px; font-size: 13px; color: #777; border-top: 1px solid #eee; }
+    h2 { color: #1a4a1a; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Еженедельный отчет</h1>
+    <p>Период: {{PeriodFrom}} — {{PeriodTo}}</p>
+  </div>
+  <div class="body">
+    <h2>Сводная статистика</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="value">{{NewBooks}}</div>
+        <div class="label">Новых книг</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">{{NewReaders}}</div>
+        <div class="label">Новых читателей</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">{{BooksBorrowed}}</div>
+        <div class="label">Выдано книг</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">{{BooksReturned}}</div>
+        <div class="label">Возвращено книг</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" style="color:#d9534f">{{OverdueBorrows}}</div>
+        <div class="label">Просроченных выдач</div>
+      </div>
+    </div>
+
+    <p>Полный CSV-отчет доступен по ссылке:</p>
+    <a class="report-link" href="{{ReportUrl}}">Скачать отчет</a>
+  </div>
+  <div class="footer">
+    Отчет сформирован автоматически системой библиотеки. Не отвечайте на это письмо.
+  </div>
+</div>
+</body>
+</html>

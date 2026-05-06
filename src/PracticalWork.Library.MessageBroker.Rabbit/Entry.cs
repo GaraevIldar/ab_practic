@@ -1,6 +1,8 @@
+#nullable enable
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PracticalWork.Library.Abstractions.MessageBroker;
+using PracticalWork.Library.Configuration;
 using PracticalWork.Library.Events;
 using PracticalWork.Library.MessageBroker.Rabbit.Abstractions;
 using PracticalWork.Library.MessageBroker.Rabbit.Consumer;
@@ -19,26 +21,27 @@ public static class Entry
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var librarySection = configuration.GetSection("App:RabbitMQ:Library");
         var reportsSection = configuration.GetSection("App:RabbitMQ:Reports");
+        
+        var libraryCfg = configuration.GetSection("App:RabbitMQ:Library").Get<LibraryRabbitConfig>()
+            ?? throw new InvalidOperationException("Конфигурация App:RabbitMQ:Library не задана или неверна");
 
-        static string QueueName(IConfiguration section, string subsection, string key = "QueueName")
-            => section.GetSection(subsection)[key] ?? throw new InvalidOperationException(
-                $"Конфигурация RabbitMQ: не задано {subsection}:{key} (App:RabbitMQ)");
+        ValidateLibraryConfig(libraryCfg);
+        services.Configure<LibraryRabbitConfig>(configuration.GetSection("App:RabbitMQ:Library"));
 
         services
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookCreatedEvent>>(
-                QueueName(librarySection, "BookCreate"))
+                libraryCfg.BookCreate.QueueName)
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookArchivedEvent>>(
-                QueueName(librarySection, "BookArchive"))
+                libraryCfg.BookArchive.QueueName)
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookReturnedEvent>>(
-                QueueName(librarySection, "BookReturn"))
+                libraryCfg.BookReturn.QueueName)
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookBorrowedEvent>>(
-                QueueName(librarySection, "BookBorrow"))
+                libraryCfg.BookBorrow.QueueName)
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderCreatedEvent>>(
-                QueueName(librarySection, "ReaderCreate"))
+                libraryCfg.ReaderCreate.QueueName)
             .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderClosedEvent>>(
-                QueueName(librarySection, "ReaderClose"))
+                libraryCfg.ReaderClose.QueueName)
             .AddKeyedSingleton<IRabbitMQConsumer, ReportGenerateConsumer>(
                 reportsSection["QueueName"] ?? throw new InvalidOperationException("Конфигурация RabbitMQ: не задано Reports:QueueName"));
         
@@ -58,5 +61,23 @@ public static class Entry
         
 
         return services;
+    }
+
+    private static void ValidateLibraryConfig(LibraryRabbitConfig c)
+    {
+        if (string.IsNullOrEmpty(c.ExchangeName))
+            throw new InvalidOperationException("App:RabbitMQ:Library:ExchangeName не задан");
+        EnsureBinding(c.BookCreate, "BookCreate");
+        EnsureBinding(c.BookArchive, "BookArchive");
+        EnsureBinding(c.BookBorrow, "BookBorrow");
+        EnsureBinding(c.BookReturn, "BookReturn");
+        EnsureBinding(c.ReaderCreate, "ReaderCreate");
+        EnsureBinding(c.ReaderClose, "ReaderClose");
+    }
+
+    private static void EnsureBinding(QueueBindingConfig? b, string name)
+    {
+        if (b == null || string.IsNullOrEmpty(b.QueueName) || string.IsNullOrEmpty(b.RoutingKey))
+            throw new InvalidOperationException($"App:RabbitMQ:Library:{name}:QueueName и RoutingKey обязательны");
     }
 }

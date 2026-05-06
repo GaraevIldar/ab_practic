@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using PracticalWork.Library.Configuration;
 using PracticalWork.Library.MessageBroker.Rabbit.Abstractions;
 using PracticalWork.Library.MessageBroker.Rabbit.Models;
 using RabbitMQ.Client;
@@ -35,7 +36,7 @@ public class RabbitSetupService
 
             var rabbitRoot = _config.GetSection("App:RabbitMQ");
 
-            var libraryCfg = ReadConfig<LibraryConfig>(rabbitRoot, "Library");
+            var libraryCfg = ReadConfig<LibraryRabbitConfig>(rabbitRoot, "Library");
             var reportsCfg = ReadConfig<ReportsConfig>(rabbitRoot, "Reports");
 
             await DeclareLibraryQueues(channel, libraryCfg, resultQueues);
@@ -62,9 +63,14 @@ public class RabbitSetupService
         return root.GetSection(section).Get<T>() ?? new T();
     }
 
+    /// <summary>
+    /// Фиксированный порядок очередей — должен совпадать с регистрацией консьюмеров в Entry.
+    /// </summary>
+    private static readonly string[] LibraryBindingNames = ["BookCreate", "BookArchive", "BookBorrow", "BookReturn", "ReaderCreate", "ReaderClose"];
+
     private static async Task DeclareLibraryQueues(
         IChannel channel,
-        LibraryConfig config,
+        LibraryRabbitConfig config,
         ICollection<string> queues)
     {
         await channel.ExchangeDeclareAsync(
@@ -72,13 +78,13 @@ public class RabbitSetupService
             type: ExchangeType.Direct,
             durable: true);
 
-        var bindings = config.GetType()
-            .GetProperties()
-            .Where(p => p.PropertyType == typeof(QueueBindingConfig))
-            .Select(p => (QueueBindingConfig)p.GetValue(config)!);
-
-        foreach (var binding in bindings)
+        foreach (var name in LibraryBindingNames)
         {
+            var binding = config.GetType().GetProperty(name)?.GetValue(config) as QueueBindingConfig
+                ?? throw new InvalidOperationException($"App:RabbitMQ:Library:{name} не задан");
+            if (string.IsNullOrEmpty(binding.QueueName) || string.IsNullOrEmpty(binding.RoutingKey))
+                throw new InvalidOperationException($"App:RabbitMQ:Library:{name}:QueueName и RoutingKey обязательны");
+
             await channel.QueueDeclareAsync(
                 binding.QueueName,
                 durable: true,

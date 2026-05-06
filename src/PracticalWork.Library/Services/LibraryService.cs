@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
+using PracticalWork.Library.Configuration;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Events;
@@ -26,8 +28,7 @@ public sealed class LibraryService : ILibraryService
     private readonly string _libraryBooksListPrefix;
     private readonly double _libraryBooksTtlInMinutes;
     private readonly IRabbitPublisher _publisher;
-    private readonly IConfigurationSection _rabbitLibrarySection;
-    private readonly string _exchangeName;
+    private readonly LibraryRabbitConfig _rabbit;
 
     public LibraryService(
         ILibraryRepository libraryRepository,
@@ -37,6 +38,7 @@ public sealed class LibraryService : ILibraryService
         ICacheService cacheService,
         IBookPaginationService paginationService,
         IConfiguration configuration,
+        IOptions<LibraryRabbitConfig> rabbitConfig,
         IRabbitPublisher rabbitPublisher)
     {
         _libraryRepository = libraryRepository;
@@ -50,8 +52,7 @@ public sealed class LibraryService : ILibraryService
         _libraryBooksListPrefix = section["LibraryBooks:Prefix"];
         _libraryBooksTtlInMinutes = section.GetValue<double>("LibraryBooks:TtlInMinutes");
         _publisher = rabbitPublisher;
-        _rabbitLibrarySection = configuration.GetSection("App:RabbitMQ:Library");
-        _exchangeName = _rabbitLibrarySection["ExchangeName"];
+        _rabbit = rabbitConfig.Value;
     }
 
     public async Task<BorrowBookResponse> BorrowBook(Guid bookId, Guid readerId)
@@ -74,8 +75,8 @@ public sealed class LibraryService : ILibraryService
             var message = new BookBorrowedEvent(bookId, readerId, book.Title, 
                 readerName, borrow.BorrowDate, borrow.DueDate);
             await _publisher.PublishAsync(
-                _exchangeName,
-                _rabbitLibrarySection["BookBorrow:RoutingKey"],
+                _rabbit.ExchangeName,
+                _rabbit.BookBorrow.RoutingKey,
                 message);
             return new BorrowBookResponse(borrow.Id);
         }
@@ -123,13 +124,13 @@ public sealed class LibraryService : ILibraryService
         {
             var book = await _bookRepository.GetBookById(borrow.BookId);
             var readerName = await _readerRepository.GetReaderFullNameById(borrow.ReaderId);
-            var message = new BookReturnedEvent(bookId, borrow.ReaderId,book.Title,
-                readerName, borrow.ReturnDate.Value);
-            await _publisher.PublishAsync(
-                _exchangeName, 
-                _rabbitLibrarySection["BookReturn:RoutingKey"], 
-                message);
             var returnId = await _libraryRepository.ReturnBook(bookId);
+            var message = new BookReturnedEvent(bookId, borrow.ReaderId, book.Title,
+                readerName, DateOnly.FromDateTime(DateTime.UtcNow));
+            await _publisher.PublishAsync(
+                _rabbit.ExchangeName,
+                _rabbit.BookReturn.RoutingKey,
+                message);
             return new ReturnBookResponse(returnId);
         }
         catch (Exception ex)

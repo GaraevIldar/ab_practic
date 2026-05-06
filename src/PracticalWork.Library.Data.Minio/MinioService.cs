@@ -30,15 +30,22 @@ public class MinioService : IMinioService
     }
 
     public async Task<string> UploadFileAsync(string objectName, Stream fileStream, string contentType)
+        => await UploadFileAsync(_options.BucketName, objectName, fileStream, contentType);
+
+    public async Task<string> UploadFileAsync(string bucket, string objectName, Stream fileStream, string contentType)
     {
+        var exists = await _client.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucket));
+        if (!exists)
+            await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucket));
+
         await _client.PutObjectAsync(new PutObjectArgs()
-            .WithBucket(_options.BucketName)
+            .WithBucket(bucket)
             .WithObject(objectName)
             .WithStreamData(fileStream)
             .WithObjectSize(fileStream.Length)
             .WithContentType(contentType));
-        
-        return $"{_options.BucketName}/{objectName}";
+
+        return $"{bucket}/{objectName}";
     }
 
     public async Task<string> GetFileLinkAsync(string bucket, string fileName)

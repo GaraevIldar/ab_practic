@@ -56,4 +56,5 @@ public sealed class AppDbContext : DbContext
     internal DbSet<ScientificBookEntity> ScientificBooks { get; set; }
     internal DbSet<ReaderEntity> Readers { get; set; }
     internal DbSet<BookBorrowEntity> BookBorrows { get; set; }
+    internal DbSet<NotificationLogEntity> NotificationLogs { get; set; }
 }

@@ -37,5 +37,10 @@
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageVersion Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+    <PackageVersion Include="Quartz" Version="3.13.1" />
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.13.1" />
+    <PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.13.1" />
+    <PackageVersion Include="MailKit" Version="4.11.0" />
+    <PackageVersion Include="MimeKit" Version="4.11.0" />
   </ItemGroup>
 </Project>

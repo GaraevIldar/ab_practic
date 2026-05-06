@@ -156,4 +156,34 @@ public class ReportService: IReportService
         await _reportRepository.UpdateReport(id,report);
         return filePath;
     }
+
+    public async Task<GeneratedReport> GenerateWeeklyReport(DateTime startDate, DateTime endDate)
+    {
+        var logs = await _activityLogRepository.GetLogsAsync(
+            DateOnly.FromDateTime(startDate),
+            DateOnly.FromDateTime(endDate),
+            Array.Empty<string>());
+
+        var timestamp = DateTime.UtcNow;
+        var fileName = $"weekly_{startDate:yyyyMMdd}_{endDate:yyyyMMdd}_{timestamp:yyyyMMddHHmmss}.csv";
+        var objectName = $"weekly/{timestamp.Year}/{timestamp.Month}/{fileName}";
+
+        var sb = new StringBuilder();
+        sb.AppendLine("EventType;EventDate;Metadata");
+        foreach (var log in logs)
+            sb.AppendLine($"{log.EventType};{log.EventDate};{JsonSerializer.Serialize(log, log.GetType())}");
+
+        const string weeklyBucket = "library-reports";
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(sb.ToString()));
+        await _minioService.UploadFileAsync(weeklyBucket, objectName, stream, "text/csv");
+        var downloadUrl = await _minioService.GetFileLinkAsync(weeklyBucket, objectName);
+
+        return new GeneratedReport
+        {
+            FileName = fileName,
+            FilePath = objectName,
+            DownloadUrl = downloadUrl,
+            GeneratedAt = timestamp,
+        };
+    }
 }

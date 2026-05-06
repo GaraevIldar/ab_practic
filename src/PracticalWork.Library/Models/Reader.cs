@@ -16,6 +16,9 @@ public sealed class Reader
     /// <summary>Номер телефона (уникальный)</summary>
     public string PhoneNumber { get; set; }
 
+    /// <summary>Адрес электронной почты</summary>
+    public string Email { get; set; }
+
     /// <summary>Дата окончания действия читательского билета</summary>
     public DateOnly ExpiryDate { get; set; }
 

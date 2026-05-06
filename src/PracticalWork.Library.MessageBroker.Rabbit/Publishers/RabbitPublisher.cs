@@ -38,6 +38,7 @@ public class RabbitPublisher: IRabbitPublisher
                 routingKey: key,
                 body: messageBytes);
 
+            _log.LogInformation("Опубликовано в RabbitMQ: exchange={Exchange}, routingKey={RoutingKey}, размер={Size} байт", exchangeName, key, messageBytes.Length);
             return true;
         }
         catch (Exception ex)
