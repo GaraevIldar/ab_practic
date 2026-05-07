@@ -50,7 +50,7 @@ public class MinioService : IMinioService
 
     public async Task<string> GetFileLinkAsync(string bucket, string fileName)
     {
-        var expiryInSeconds = _options.ExpInSeconds;
+        var expiryInSeconds = _options.ExpInSeconds > 0 ? _options.ExpInSeconds : 604800;
 
         var args = new PresignedGetObjectArgs()
             .WithBucket(bucket)

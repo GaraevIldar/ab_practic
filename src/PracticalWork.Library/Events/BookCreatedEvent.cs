@@ -14,17 +14,4 @@ public sealed record BookCreatedEvent(
     string Category,
     string[] Authors,
     int Year
-) : BaseLibraryEvent("book.created")
-{
-    public BookCreatedEvent(Guid bookId, string title, string category, string[] authors,
-        int year, DateTime createdAt)
-        : this(
-            bookId,
-            title,
-            category,
-            authors ?? Array.Empty<string>(),
-            year
-        )
-    {
-    }
-}
+) : BaseLibraryEvent("book.created");

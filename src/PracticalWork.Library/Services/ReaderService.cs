@@ -35,7 +35,7 @@ public class ReaderService : IReaderService
         {
             var idReader = await _repository.CreateReader(reader);
             var message = new ReaderCreatedEvent(idReader, reader.FullName,
-                reader.PhoneNumber, reader.ExpiryDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), reader.CreatedAt);
+                reader.PhoneNumber, reader.ExpiryDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
             await _publisher.PublishAsync(
                 _rabbit.ExchangeName, 
                 _rabbit.ReaderCreate.RoutingKey, 
@@ -76,8 +76,7 @@ public class ReaderService : IReaderService
         try
         {
             var readerFullName = await _repository.GetReaderFullNameById(id);
-            var message = new ReaderClosedEvent(id, readerFullName,
-                DateTime.UtcNow, "Вызван метод закрытия карточки");
+            var message = new ReaderClosedEvent(id, readerFullName, DateTime.UtcNow);
             await _publisher.PublishAsync(
                 _rabbit.ExchangeName, 
                 _rabbit.ReaderClose.RoutingKey, 

@@ -12,11 +12,4 @@ public sealed record ReaderCreatedEvent(
     string FullName,
     string PhoneNumber,
     DateTime ExpiryDate
-) : BaseLibraryEvent("reader.created")
-{
-    /// <summary>
-    /// Основной конструктор с автогенерацией идентификаторов события
-    /// </summary>
-    public ReaderCreatedEvent(Guid readerId, string fullName, string phoneNumber, DateTime expiryDate, DateTime createdAt)
-        : this(ReaderId: readerId, FullName: fullName, PhoneNumber: phoneNumber, ExpiryDate: expiryDate){}
-}
+) : BaseLibraryEvent("reader.created");
