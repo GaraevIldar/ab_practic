@@ -7,5 +7,8 @@ namespace PracticalWork.Library.Abstractions.Services;
 /// </summary>
 public interface IArchiveService
 {
+    /// <summary>
+    /// Архивация книг, не выдававшихся более указанного числа лет
+    /// </summary>
     Task<ArchiveResult> ArchiveOldBooks(int yearsWithoutBorrow, int maxBooksPerRun);
 }

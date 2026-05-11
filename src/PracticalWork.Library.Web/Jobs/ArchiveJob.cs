@@ -11,20 +11,23 @@ public sealed class ArchiveJob : IJob
     private readonly IArchiveService _archiveService;
     private readonly ArchiveSettings _archiveSettings;
     private readonly ILogger<ArchiveJob> _logger;
+    private readonly TimeProvider _timeProvider;
 
     public ArchiveJob(
         IArchiveService archiveService,
         IOptions<ArchiveSettings> archiveSettings,
-        ILogger<ArchiveJob> logger)
+        ILogger<ArchiveJob> logger,
+        TimeProvider timeProvider)
     {
         _archiveService = archiveService;
         _archiveSettings = archiveSettings.Value;
         _logger = logger;
+        _timeProvider = timeProvider;
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        _logger.LogInformation("ArchiveJob started at {Time}", DateTime.UtcNow);
+        _logger.LogInformation("ArchiveJob started at {Time}", _timeProvider.GetUtcNow());
 
         var result = await _archiveService.ArchiveOldBooks(
             _archiveSettings.YearsWithoutBorrow,

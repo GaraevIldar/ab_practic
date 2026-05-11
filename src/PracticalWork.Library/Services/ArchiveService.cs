@@ -15,15 +15,18 @@ public sealed class ArchiveService : IArchiveService
     private readonly IRabbitPublisher _publisher;
     private readonly ILogger<ArchiveService> _logger;
     private readonly LibraryRabbitConfig _rabbit;
+    private readonly TimeProvider _timeProvider;
     private const string RoutingKey = "book.archived";
 
     public ArchiveService(IBookRepository bookRepository, IRabbitPublisher publisher,
-        ILogger<ArchiveService> logger, IOptions<LibraryRabbitConfig> rabbitConfig)
+        ILogger<ArchiveService> logger, IOptions<LibraryRabbitConfig> rabbitConfig,
+        TimeProvider timeProvider)
     {
         _bookRepository = bookRepository;
         _publisher = publisher;
         _logger = logger;
         _rabbit = rabbitConfig.Value;
+        _timeProvider = timeProvider;
     }
 
     public async Task<ArchiveResult> ArchiveOldBooks(int yearsWithoutBorrow, int maxBooksPerRun)
@@ -41,7 +44,7 @@ public sealed class ArchiveService : IArchiveService
                 await _bookRepository.MoveToArchive(book.Id);
 
                 var evt = new BookArchivedEvent(book.Id, book.Title,
-                    $"Книга не выдавалась более {yearsWithoutBorrow} лет", DateTime.UtcNow);
+                    $"Книга не выдавалась более {yearsWithoutBorrow} лет", _timeProvider.GetUtcNow().UtcDateTime);
                 await _publisher.PublishAsync(_rabbit.ExchangeName, RoutingKey, evt);
 
                 result.Archived++;

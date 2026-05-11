@@ -15,9 +15,23 @@ public interface IBookService
     /// </summary>
     Task<Guid> CreateBook(Book book);
 
+    /// <summary>
+    /// Обновление данных книги
+    /// </summary>
     Task UpdateBook(Guid id, Book book);
 
+    /// <summary>
+    /// Перемещение книги в архив
+    /// </summary>
     Task MoveToArchive(Guid id);
+
+    /// <summary>
+    /// Получение постраничного списка книг с фильтрацией
+    /// </summary>
     Task<BookListResponse> GetBooks(int pageNumber, int pageSize, BookStatus? status, BookCategory? category, string author);
+
+    /// <summary>
+    /// Добавление детальной информации и обложки к книге
+    /// </summary>
     Task AddBookDetails(Guid bookId, string description, IFormFile coverFile);
 }
