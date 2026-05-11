@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura,opencover</Format>
+          <Include>[PracticalWork.Library]*,[PracticalWork.Library.Web]*,[PracticalWork.Library.Data.Minio]*,[PracticalWork.Library.Contracts]*</Include>
+          <Exclude>[*.UnitTests]*,[*]*.Migrations.*,[PracticalWork.Library.Data.PostgreSql]*,[PracticalWork.Library.Report.PostgreSql]*,[PracticalWork.Library.MessageBroker.Rabbit]*,[PracticalWork.Library.Cache.Redis]*</Exclude>
+          <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+          <SingleHit>false</SingleHit>
+          <UseSourceLink>false</UseSourceLink>
+          <IncludeTestAssembly>false</IncludeTestAssembly>
+          <SkipAutoProps>true</SkipAutoProps>
+          <DeterministicReport>false</DeterministicReport>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

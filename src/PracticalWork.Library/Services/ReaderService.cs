@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
@@ -9,7 +8,6 @@ using PracticalWork.Library.Events;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Exceptions.Reader;
 using PracticalWork.Library.Models;
-using StackExchange.Redis;
 
 namespace PracticalWork.Library.Services;
 
@@ -18,15 +16,18 @@ public class ReaderService : IReaderService
     private readonly IReaderRepository _repository;
     private readonly IRabbitPublisher _publisher;
     private readonly LibraryRabbitConfig _rabbit;
+    private readonly TimeProvider _timeProvider;
 
     public ReaderService(
         IReaderRepository repository,
         IRabbitPublisher publisher,
-        IOptions<LibraryRabbitConfig> rabbitConfig)
+        IOptions<LibraryRabbitConfig> rabbitConfig,
+        TimeProvider timeProvider)
     {
         _repository = repository;
         _publisher = publisher;
         _rabbit = rabbitConfig.Value;
+        _timeProvider = timeProvider;
     }
 
     public async Task<Guid> CreateReader(Reader reader)
@@ -76,7 +77,7 @@ public class ReaderService : IReaderService
         try
         {
             var readerFullName = await _repository.GetReaderFullNameById(id);
-            var message = new ReaderClosedEvent(id, readerFullName, DateTime.UtcNow);
+            var message = new ReaderClosedEvent(id, readerFullName, _timeProvider.GetUtcNow().UtcDateTime);
             await _publisher.PublishAsync(
                 _rabbit.ExchangeName, 
                 _rabbit.ReaderClose.RoutingKey, 

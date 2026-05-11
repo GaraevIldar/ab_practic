@@ -15,24 +15,27 @@ public sealed class ReturnRemindersJob : IJob
     private readonly EmailTemplateSettings _templateSettings;
     private readonly ILogger<ReturnRemindersJob> _logger;
     private readonly IWebHostEnvironment _env;
+    private readonly TimeProvider _timeProvider;
 
     public ReturnRemindersJob(
         ILibraryRepository libraryRepository,
         IEmailService emailService,
         IOptions<EmailTemplateSettings> templateSettings,
         ILogger<ReturnRemindersJob> logger,
-        IWebHostEnvironment env)
+        IWebHostEnvironment env,
+        TimeProvider timeProvider)
     {
         _libraryRepository = libraryRepository;
         _emailService = emailService;
         _templateSettings = templateSettings.Value;
         _logger = logger;
         _env = env;
+        _timeProvider = timeProvider;
     }
 
     public async Task Execute(IJobExecutionContext context)
     {
-        _logger.LogInformation("ReturnRemindersJob started at {Time}", DateTime.UtcNow);
+        _logger.LogInformation("ReturnRemindersJob started at {Time}", _timeProvider.GetUtcNow());
 
         var daysAhead = _templateSettings.ReturnReminder.DaysBeforeDueDate;
         var borrows = await _libraryRepository.GetBorrowsDueSoon(daysAhead);

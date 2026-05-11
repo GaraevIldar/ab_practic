@@ -7,7 +7,7 @@ PracticalWork.Library
 Разработка системы управления библиотекой.
 
 ### Исполняемые модули
-1. PracticalWork.Library.Web - ASP.NET 8 WebApi
+1. PracticalWork.Library.Web - ASP.NET 10 WebApi
 2. PracticalWork.Library.Data.PostgreSql.Migrator - запуск миграций
 
 ### Интеграции

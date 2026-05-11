@@ -7,5 +7,8 @@ namespace PracticalWork.Library.Abstractions.Services;
 /// </summary>
 public interface IEmailService
 {
+    /// <summary>
+    /// Отправка email-сообщения
+    /// </summary>
     Task<EmailSendResult> SendAsync(EmailMessage message);
 }

@@ -31,6 +31,8 @@ public class ReportService: IReportService
     private readonly string _reportsListPrefix;
     private readonly double _reportsListTtlInMinutes;
 
+    private readonly TimeProvider _timeProvider;
+
     public ReportService(IActivityLogRepository activityLogRepository,
         IActivityLogPaginationService activeLogPaginationService,
         IReportRepository reportRepository,
@@ -38,7 +40,8 @@ public class ReportService: IReportService
         IConfiguration configuration,
         ICacheService cacheService,
         IMinioService minioService,
-        IOptionsMonitor<MinioOptions> minioOptions)
+        IOptionsMonitor<MinioOptions> minioOptions,
+        TimeProvider timeProvider)
     {
         _activityLogRepository = activityLogRepository;
         _activeLogPaginationService = activeLogPaginationService;
@@ -47,6 +50,7 @@ public class ReportService: IReportService
         _minioService = minioService;
         _minioOptions = minioOptions.CurrentValue;
         _publisher = publisher;
+        _timeProvider = timeProvider;
         var rabbitSection = configuration.GetSection("App:RabbitMQ:Reports");
         _exchangeName = rabbitSection["Exchange"];
         _routingKey = rabbitSection["RoutingKey"];
@@ -110,7 +114,7 @@ public class ReportService: IReportService
     }
     public ReportGenerateResult GenerateReport(Guid reportId, IReadOnlyList<ActivityLog> logs)
     {
-        var timestamp = DateTime.UtcNow;
+        var timestamp = _timeProvider.GetUtcNow().UtcDateTime;
         string fileName = $"{timestamp.Year}/{timestamp.Month}/{reportId}.csv";
         string contentType = "text/csv";
 
@@ -148,7 +152,7 @@ public class ReportService: IReportService
     public async Task<string> GetReportUrl(string reportName)
     {
         var (id,report) = await _reportRepository.GetReportByName(reportName);
-        var generatedDate = report.GeneratedAt ?? DateTime.UtcNow;
+        var generatedDate = report.GeneratedAt ?? _timeProvider.GetUtcNow().UtcDateTime;
         var fileName = $"{generatedDate.Year}/{generatedDate.Month}/{reportName}";
         var filePath = await _minioService.GetFileLinkAsync(
             _minioOptions.BucketName, fileName);
@@ -164,7 +168,7 @@ public class ReportService: IReportService
             DateOnly.FromDateTime(endDate),
             Array.Empty<string>());
 
-        var timestamp = DateTime.UtcNow;
+        var timestamp = _timeProvider.GetUtcNow().UtcDateTime;
         var fileName = $"weekly_{startDate:yyyyMMdd}_{endDate:yyyyMMdd}_{timestamp:yyyyMMddHHmmss}.csv";
         var objectName = $"weekly/{timestamp.Year}/{timestamp.Month}/{fileName}";
 
