@@ -85,6 +85,7 @@ public class Startup
 
         services.AddScoped<IEmailService, SmtpEmailService>();
 
+<<<<<<< HEAD
         services.AddSingleton(TimeProvider.System);
 
 =======
