@@ -84,16 +84,7 @@ public class Startup
         services.Configure<JobSettings>(Configuration.GetSection("App:Jobs"));
 
         services.AddScoped<IEmailService, SmtpEmailService>();
-
-<<<<<<< HEAD
-        services.AddSingleton(TimeProvider.System);
-
-=======
-        // TimeProvider
-        services.AddSingleton(TimeProvider.System);
-
-        // Quartz.NET scheduler — cron expressions come exclusively from appsettings App:Jobs:Jobs
->>>>>>> 9c92a309fffce5cafd330f3f872a8e3c85b6ca0e
+        
         var jobSettings = Configuration.GetSection("App:Jobs").Get<JobSettings>() ?? new JobSettings();
         services.AddQuartz(q =>
         {
